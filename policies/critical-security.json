@@ -2,6 +2,7 @@
   "policyName": "critical-security",
   "version": "1.1",
   "description": "Critical security patterns for high-risk vulnerability detection in MCP servers",
+  "severity": "Critical",
   "riskThresholds": {
     "critical": 50,
     "high": 30,

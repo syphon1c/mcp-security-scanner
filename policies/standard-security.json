@@ -2,6 +2,7 @@
   "policyName": "standard-security",
   "version": "1.0",
   "description": "Standard security checks for general MCP server assessment",
+  "severity": "Medium",
   "riskThresholds": {
     "critical": 50,
     "high": 30,

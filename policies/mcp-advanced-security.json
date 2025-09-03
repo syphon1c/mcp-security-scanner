@@ -2,6 +2,7 @@
   "policyName": "mcp-advanced-security",
   "version": "1.1.0",
   "description": "Advanced MCP-specific security policy with protocol attack detection",
+  "severity": "High",
   "riskThresholds": {
     "critical": 50,
     "high": 30,
