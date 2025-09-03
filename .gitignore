@@ -21,6 +21,7 @@ Thumbs.db
 *.dll
 *.so
 *.dylib
+!/cmd/mcpscan/
 mcpscan
 mcpscan.exe
 mcp-security-scanner
