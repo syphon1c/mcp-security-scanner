@@ -23,6 +23,7 @@ Thumbs.db
 *.dylib
 mcpscan
 mcpscan.exe
+mcp-security-scanner
 
 # Go test files
 *.test
