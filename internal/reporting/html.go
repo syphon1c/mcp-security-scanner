@@ -1169,13 +1169,13 @@ const htmlTemplate = `<!DOCTYPE html>
             <p>This assessment analyzed {{.Summary.TotalFindings}} findings across {{len .MCPServer.Tools}} tools and {{len .MCPServer.Resources}} resources</p>
             
             <div class="footer-links">
-                <a href="https://github.com/syphon1c/mcp-security" target="_blank">
+                <a href="https://github.com/syphon1c/mcp-security-scanner/" target="_blankr">
                     <i class="fab fa-github"></i> GitHub Repository
                 </a>
-                <a href="https://github.com/syphon1c/mcp-security/docs" target="_blank">
+                <a href="https://github.com/syphon1c/mcp-security-scanner/tree/main/docs" target="_blankd">
                     <i class="fas fa-book"></i> Documentation
                 </a>
-                <a href="https://github.com/syphon1c/mcp-security/issues" target="_blank">
+                <a href="https://github.com/syphon1c/mcp-security-scanner/issues" target="_blanki">
                     <i class="fas fa-life-ring"></i> Support
                 </a>
             </div>
