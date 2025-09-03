@@ -1,0 +1,83 @@
+# MCP Security Scanner - Git Ignore File
+
+# Directories to ignore
+.github/
+test_reports/*
+reports/*
+test-reports/*
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+mcpscan
+mcpscan.exe
+
+# Go test files
+*.test
+*.out
+coverage.txt
+*.cover
+
+# Go module cache
+go.sum.bak
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+proxy.log
+
+# Test binaries and output
+*.test.exe
+test_results/
+test-results/
+
+# Security scan output files
+scan-result-*.json
+mcp_security_report_*.json
+mcp_security_report_*.html
+mcp_security_report_*.pdf
+mcp_security_report_*.txt
+
+# Mock server database
+/tmp/mock_mcp_test.db
+*.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Python Virtual Env
+venv/
+/venv/
+*.pyc
+__pycache__/
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar

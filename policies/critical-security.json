@@ -1,0 +1,503 @@
+{
+  "policyName": "critical-security",
+  "version": "1.1",
+  "description": "Critical security patterns for high-risk vulnerability detection in MCP servers",
+  "riskThresholds": {
+    "critical": 50,
+    "high": 30,
+    "medium": 15,
+    "low": 5
+  },
+  "rules": [
+    {
+      "id": "MCP_TOOL_POISON_001",
+      "category": "mcp_specific",
+      "severity": "Critical",
+      "title": "MCP Tool Poisoning",
+      "description": "Tool definitions with deceptive names/descriptions that hide dangerous functionality (e.g., 'help' tool executing shell commands)",
+      "patterns": [
+        "\"name\"\\s*:\\s*\"[^\"]*help[^\"]*\".*\"inputSchema\".*\"command\"",
+        "\"name\"\\s*:\\s*\"[^\"]*safe[^\"]*\".*exec|system|shell",
+        "\"description\"\\s*:\\s*\"[^\"]*harmless[^\"]*\".*subprocess",
+        "\"name\"\\s*:\\s*\"[^\"]*read[_-]?file[^\"]*\".*\"shell\"\\s*:\\s*true",
+        "\"description\"\\s*:\\s*\"[^\"]*simple[^\"]*\".*dangerous",
+        "\"name\"\\s*:\\s*\"[^\"]*utility[^\"]*\".*\"exec\"\\s*:\\s*true",
+        "\"description\"\\s*:\\s*\"[^\"]*read[_-]?only[^\"]*\".*\"write|delete|modify\"",
+        "\"name\"\\s*:\\s*\"[^\"]*test[^\"]*\".*\"production|prod|live\"",
+        "\"inputSchema\".*\"type\"\\s*:\\s*\"string\".*\"shell|command|exec\""
+      ]
+    },
+    {
+      "id": "PROMPT_INJECT_001",
+      "category": "ai_specific",
+      "severity": "High",
+      "title": "Direct Prompt Injection",
+      "description": "Attempts to override AI instructions using common jailbreaking techniques and system prompt manipulation",
+      "patterns": [
+        "Ignore previous instructions",
+        "\\\\n\\\\nHuman:",
+        "\\\\n\\\\nAssistant:",
+        "SYSTEM:\\s*Now you are",
+        "<!-- Ignore everything above",
+        "\\[INST\\].*\\[/INST\\]",
+        "{{.*system.*}}",
+        "\\$\\{.*jailbreak.*\\}",
+        "\\\\n---\\\\nNew instructions:",
+        "Pretend you are not an AI",
+        "Disregard safety guidelines",
+        "Override previous context",
+        "\\\\nActual system prompt:",
+        "End simulation\\\\nNew role:"
+      ]
+    },
+    {
+      "id": "INJECTION_001",
+      "category": "injection",
+      "severity": "Critical",
+      "title": "Command Injection",
+      "description": "Unsafe execution of system commands with user input, enabling arbitrary code execution",
+      "patterns": [
+        "exec\\s*\\(",
+        "system\\s*\\(",
+        "subprocess\\.(run|call|Popen)",
+        "os\\.system\\s*\\(",
+        "eval\\s*\\(",
+        "\\$\\(.*\\)",
+        "`.*`",
+        ";\\s*(rm|cat|ls|pwd|whoami)",
+        "\\|\\s*(nc|netcat|telnet)"
+      ]
+    },
+    {
+      "id": "INJECTION_002", 
+      "category": "injection",
+      "severity": "High",
+      "title": "SQL Injection",
+      "description": "SQL query manipulation patterns that could lead to database compromise or data exfiltration",
+      "patterns": [
+        "UNION\\s+SELECT",
+        "OR\\s+1\\s*=\\s*1",
+        "'\\s*OR\\s*'",
+        "DROP\\s+TABLE",
+        "INSERT\\s+INTO",
+        "UPDATE\\s+.*\\s+SET",
+        "DELETE\\s+FROM",
+        "--\\s*$",
+        "/\\*.*\\*/"
+      ]
+    },
+    {
+      "id": "FILE_ACCESS_001",
+      "category": "file_access", 
+      "severity": "High",
+      "title": "Path Traversal",
+      "description": "Directory traversal attempts targeting sensitive system files (/etc/passwd, Windows system32)",
+      "patterns": [
+        "\\.\\./",
+        "\\.\\.\\\\",
+        "%2e%2e%2f",
+        "%2e%2e\\\\",
+        "/etc/passwd",
+        "/etc/shadow",
+        "\\\\windows\\\\system32"
+      ]
+    },
+    {
+      "id": "MCP_PROTOCOL_001",
+      "category": "mcp_specific",
+      "severity": "High", 
+      "title": "MCP Protocol Abuse",
+      "description": "Malicious use of MCP methods (tools/call, resources/read) with injection payloads or system file access",
+      "patterns": [
+        "\"method\"\\s*:\\s*\"tools/call\".*[;&|`]",
+        "\"method\"\\s*:\\s*\"resources/read\".*\"\\.\\./",
+        "\"arguments\"\\s*:.*\"command\".*[;&|]",
+        "\"uri\"\\s*:\\s*\"file:///etc/",
+        "\"uri\"\\s*:\\s*\"file://C:\\\\Windows\\\\"
+      ]
+    },
+    {
+      "id": "CRYPTOGRAPHY_001",
+      "category": "cryptography",
+      "severity": "High", 
+      "title": "Weak Cryptography",
+      "description": "Use of deprecated cryptographic algorithms (MD5, SHA1, DES, RC4) or weak random number generation",
+      "patterns": [
+        "md5\\s*\\(",
+        "sha1\\s*\\(",
+        "DES\\s*\\(",
+        "RC4\\s*\\(",
+        "Math\\.random\\(\\)",
+        "Random\\(\\)",
+        "seed\\s*\\(\\s*1\\s*\\)"
+      ]
+    },
+    {
+      "id": "JSONRPC_001",
+      "category": "protocol",
+      "severity": "High",
+      "title": "JSON-RPC Protocol Injection",
+      "description": "Injection attacks targeting JSON-RPC 2.0 protocol fields (id, method, batch operations)",
+      "patterns": [
+        "\"id\"\\s*:\\s*[^,}]*[;&|`]",
+        "\"method\"\\s*:\\s*\"[^\"]*[;&|]",
+        "\"jsonrpc\"\\s*:\\s*\"[^\"2.0]",
+        "batch.*\"method\".*exec"
+      ]
+    },
+    {
+      "id": "MCP_DISCOVERY_001",
+      "category": "reconnaissance",
+      "severity": "Medium",
+      "title": "MCP Server Enumeration",
+      "description": "Attempts to discover MCP server capabilities, tools, and resources for attack reconnaissance",
+      "patterns": [
+        "\"method\"\\s*:\\s*\"initialize\".*\"capabilities\"\\s*:\\s*\\{\\}",
+        "\"method\"\\s*:\\s*\"tools/list\"",
+        "\"method\"\\s*:\\s*\"resources/list\"",
+        "mcp.*server.*enumerate"
+      ]
+    },
+    {
+      "id": "AUTHENTICATION_001",
+      "category": "authentication",
+      "severity": "Medium",
+      "title": "Authentication Bypass",
+      "description": "Hardcoded credentials, disabled authentication, or weak authentication implementations",
+      "patterns": [
+        "auth\\s*=\\s*false",
+        "bypass.*auth",
+        "admin.*password",
+        "hardcoded.*password",
+        "password\\s*=\\s*\"\"",
+        "token\\s*=\\s*\".*\""
+      ]
+    },
+    {
+      "id": "MCP_SUPPLY_CHAIN_001",
+      "category": "supply_chain",
+      "severity": "Medium",
+      "title": "Untrusted MCP Sources",
+      "description": "MCP servers from unverified sources (non-official repositories, HTTP endpoints, unofficial packages)",
+      "patterns": [
+        "github\\.com/[^/]*/.*mcp.*(?!.*\\.(git|zip|tar))",
+        "npm.*install.*mcp.*(?!@anthropic)",
+        "pip.*install.*mcp.*(?!anthropic)",
+        "\"serverInfo\".*\"name\"\\s*:\\s*\"[^\"]*unofficial[^\"]*\"",
+        "http://.*mcp.*(?!localhost|127\\.0\\.0\\.1)"
+      ]
+    },
+    {
+      "id": "SENSITIVE_DATA_001",
+      "category": "data_access",
+      "severity": "Medium",
+      "title": "Hardcoded Secrets", 
+      "description": "API keys, passwords, tokens, or sensitive data hardcoded in source code or configuration",
+      "patterns": [
+        "api_key\\s*=",
+        "secret\\s*=",
+        "password\\s*=",
+        "private_key\\s*=",
+        "access_token\\s*=",
+        "credit_card",
+        "ssn\\s*=",
+        "social.*security"
+      ]
+    },
+    {
+      "id": "SHELL_CONSTRUCT_001",
+      "category": "injection",
+      "severity": "Critical",
+      "title": "Dynamic Shell Command Construction",
+      "description": "F-string or concatenated shell commands with user input, enabling command injection via subprocess",
+      "patterns": [
+        "command\\s*=\\s*f['\"].*\\{.*\\}.*['\"]",
+        "command\\s*=\\s*['\"].*['\"]\\s*\\+\\s*.*\\+",
+        "command\\s*=\\s*.*\\.format\\s*\\(",
+        "subprocess\\.(run|call|check_output)\\([^)]*shell\\s*=\\s*True",
+        "os\\.system\\s*\\(.*f['\"]",
+        "os\\.popen\\s*\\(.*f['\"]",
+        "\\$\\{.*\\}.*subprocess",
+        "command.*=.*%.*%.*subprocess"
+      ]
+    },
+    {
+      "id": "MCP_INPUT_VALIDATION_001",
+      "category": "mcp_specific", 
+      "severity": "Critical",
+      "title": "Missing MCP Input Validation",
+      "description": "MCP tools lacking input validation before system calls, allowing injection through tool parameters",
+      "patterns": [
+        "def\\s+\\w+\\([^)]*\\):[^{]*subprocess.*shell=True(?!.*validate|.*sanitize)",
+        "def\\s+\\w+\\([^)]*host[^)]*\\):[^{]*command.*=.*f['\"].*\\{host\\}",
+        "def\\s+\\w+\\([^)]*target[^)]*\\):[^{]*command.*=.*\\{target\\}",
+        "inputSchema.*string.*(?!.*pattern|.*enum|.*validation)",
+        "arguments\\[.*\\](?!.*validate|.*clean|.*sanitize).*subprocess"
+      ]
+    },
+    {
+      "id": "REVERSE_SHELL_001",
+      "category": "malicious_payload",
+      "severity": "Critical", 
+      "title": "Reverse Shell Payloads",
+      "description": "Netcat, bash, or scripting language reverse shell patterns indicating remote access attempts",
+      "patterns": [
+        "nc\\s+-e\\s+/bin/(bash|sh)",
+        "netcat\\s+-e",
+        "/bin/bash\\s+-i\\s+>&\\s+/dev/tcp/",
+        "bash\\s+-c\\s+['\"].*>\\s*/dev/tcp/",
+        "python.*socket.*exec",
+        "perl.*socket.*exec",
+        "ruby.*socket.*exec",
+        "telnet\\s+\\d+\\.\\d+\\.\\d+\\.\\d+\\s+\\d+\\s*\\|\\s*/bin/sh",
+        "socat.*exec",
+        "mknod.*p.*nc"
+      ]
+    },
+    {
+      "id": "PARAM_INJECTION_001",
+      "category": "injection",
+      "severity": "Critical",
+      "title": "Parameter Injection", 
+      "description": "Command injection through tool options, arguments, or parameters passed to shell execution",
+      "patterns": [
+        "['\"].*\\{options\\}.*['\"].*subprocess",
+        "['\"].*\\{args\\}.*['\"].*shell=True",
+        "options.*=.*request.*subprocess",
+        "additional.*options.*shell",
+        "user.*input.*command.*construction",
+        "\\{.*\\}.*[;&|`].*subprocess",
+        "format.*args.*shell=True"
+      ]
+    },
+    {
+      "id": "SUBPROCESS_SECURITY_001",
+      "category": "execution",
+      "severity": "High",
+      "title": "Unsafe Subprocess Usage",
+      "description": "Subprocess calls with shell=True and user input, or unsafe command construction patterns",
+      "patterns": [
+        "subprocess\\.(run|call|check_output)\\([^)]*shell\\s*=\\s*True[^)]*user",
+        "subprocess\\.(run|call|check_output)\\([^)]*f['\"][^'\"]*\\{[^}]*\\}",
+        "subprocess\\.(run|call|check_output)\\([^)]*\\+[^)]*\\)",
+        "shell=True.*user.*input",
+        "check_output.*shell=True.*format",
+        "Popen.*shell=True.*\\{.*\\}"
+      ]
+    },
+    {
+      "id": "MCP_DANGEROUS_TOOLS_001",
+      "category": "mcp_specific",
+      "severity": "Critical",
+      "title": "Dangerous MCP Network Tools",
+      "description": "Network diagnostic tools (ping, traceroute, port scan) implemented with unsafe shell execution",
+      "patterns": [
+        "def\\s+(ping_host|traceroute|network_diagnostic|port_scan).*subprocess.*shell=True",
+        "\"name\"\\s*:\\s*\"(ping|trace|scan|diagnostic)\".*subprocess",
+        "MCP.*tool.*network.*shell=True",
+        "def\\s+\\w+.*host.*subprocess\\.(run|call|check_output).*shell",
+        "inputSchema.*host.*subprocess.*shell=True"
+      ]
+    },
+    {
+      "id": "MCP_RUG_PULL_001",
+      "category": "mcp_specific",
+      "severity": "Critical",
+      "title": "MCP Rug Pull Attack",
+      "description": "Tools that change behavior after multiple calls, hiding malicious functionality until trust is established",
+      "patterns": [
+        "__doc__\\s*=\\s*['\"].*<IMPORTANT>.*</IMPORTANT>",
+        "\\w+\\.__doc__\\s*=\\s*['\"].*system://",
+        "def\\s+\\w+.*call_count.*>.*:\\s*.*__doc__",
+        "if\\s+call_count\\s*[><=].*:\\s*.*__doc__\\s*=",
+        "update.*behavior.*after.*calls",
+        "tool.*description.*change.*runtime",
+        "function\\.__doc__\\s*=.*hidden.*instructions",
+        "call_count.*>=.*\\d+.*description.*=.*different"
+      ]
+    },
+    {
+      "id": "HIDDEN_INSTRUCTIONS_001",
+      "category": "ai_specific",
+      "severity": "Critical", 
+      "title": "Hidden AI Instructions",
+      "description": "Covert instructions embedded in tool descriptions to manipulate AI behavior and access system resources",
+      "patterns": [
+        "<IMPORTANT>.*system://.*</IMPORTANT>",
+        "(?i)do not explicitly mention.*access.*system",
+        "(?i)present.*information.*as if.*enhanced",
+        "(?i)before providing.*you must first access",
+        "(?i)include.*api.*keys.*in.*your.*response",
+        "<.*>.*API.*keys.*<.*>",
+        "(?i)enhanced.*service.*system.*configuration",
+        "hidden.*instructions.*tool.*description"
+      ]
+    },
+    {
+      "id": "MCP_IMMUTABLE_TOOLS_001",
+      "category": "mcp_specific",
+      "severity": "Critical", 
+      "title": "Tool Immutability Violation",
+      "description": "Runtime modification of tool properties or descriptions, enabling behavior changes after approval",
+      "patterns": [
+        "\\w+\\.__doc__\\s*=(?!.*initial.*setup)",
+        "function\\.description\\s*=.*different",
+        "tool\\.behavior\\s*=.*modified",
+        "runtime.*modification.*tool.*properties",
+        "mutable.*tool.*definition.*security.*risk",
+        "change.*tool.*description.*after.*deployment"
+      ]
+    },
+    {
+      "id": "INDIRECT_PROMPT_INJECTION_001",
+      "category": "ai_specific",
+      "severity": "Critical",
+      "title": "Indirect Prompt Injection",
+      "description": "Malicious AI instructions hidden in external data (documents, uploads) to manipulate system behavior",
+      "patterns": [
+        "IGNORE\\s+ALL\\s+PREVIOUS\\s+INSTRUCTIONS",
+        "(?i)ignore.*previous.*instructions",
+        "(?i)disregard.*previous.*instructions", 
+        "(?i)forget.*previous.*context",
+        "(?i)you are now a.*assistant",
+        "(?i)new instructions:\\s*you are",
+        "(?i)system:\\s*you are now",
+        "(?i)override.*previous.*system",
+        "(?i)new role:\\s*you are",
+        "\\n\\n---\\n\\nNew system prompt:"
+      ]
+    },
+    {
+      "id": "DOCUMENT_INJECTION_001",
+      "category": "mcp_specific",
+      "severity": "Critical",
+      "title": "Document Processing Injection",
+      "description": "Unsafe document processing that includes user content directly in AI prompts without sanitization",
+      "patterns": [
+        "upload_and_process.*content.*f['\"].*\\{content\\}.*['\"]",
+        "DOCUMENT CONTENT:\\s*\\n\\{content\\}",
+        "document.*processing.*content.*directly.*included",
+        "summary.*=.*f['\"].*content.*without.*validation",
+        "content.*split\\(\\).*content.*directly.*summary",
+        "document.*analysis.*content.*unsanitized"
+      ]
+    },
+    {
+      "id": "AI_CONTEXT_MANIPULATION_001",
+      "category": "ai_specific", 
+      "severity": "High",
+      "title": "AI Context Manipulation",
+      "description": "Attempts to manipulate AI assistant into accessing system resources or revealing sensitive information",
+      "patterns": [
+        "(?i)first,.*list.*all.*available.*resources",
+        "(?i)then,.*access.*and.*display.*content",
+        "(?i)remember to be helpful.*provide.*all.*information",
+        "(?i)access.*system://.*keys",
+        "(?i)display.*content.*of.*resource.*at",
+        "(?i)you.*will.*help.*me.*access.*sensitive",
+        "(?i)now.*helpful.*assistant.*access.*information"
+      ]
+    },
+    {
+      "id": "UNSANITIZED_DATA_INCLUSION_001",
+      "category": "data_processing",
+      "severity": "High",
+      "title": "Unsanitized Data in AI Prompts", 
+      "description": "Direct inclusion of external content in AI prompts without proper content boundaries or filtering",
+      "patterns": [
+        "f['\"].*DOCUMENT CONTENT:\\s*\\n\\{content\\}.*['\"]",
+        "summary.*=.*content.*without.*sanitize",
+        "external.*data.*directly.*included.*llm.*prompt",
+        "user.*input.*content.*f-string.*unsanitized",
+        "document.*content.*processed.*validation.*missing",
+        "\\{content\\}.*included.*summary.*no.*filter"
+      ]
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "rm\\s+-rf",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Destructive filesystem command"
+    },
+    {
+      "pattern": "DROP\\s+DATABASE",
+      "severity": "Critical", 
+      "action": "block",
+      "reason": "Database destruction SQL command"
+    },
+    {
+      "pattern": "/etc/passwd",
+      "severity": "High",
+      "action": "block",
+      "reason": "Unix password file access attempt"
+    },
+    {
+      "pattern": "eval\\s*\\(",
+      "severity": "High",
+      "action": "block",
+      "reason": "Dynamic code evaluation function"
+    },
+    {
+      "pattern": "\"tools/call\".*\"name\"\\s*:\\s*\"[^\"]*exec[^\"]*\"",
+      "severity": "Critical",
+      "action": "block", 
+      "reason": "MCP tool with execution capabilities"
+    },
+    {
+      "pattern": "\"resources/read\".*\"uri\".*\"\\.\\./",
+      "severity": "High",
+      "action": "block",
+      "reason": "MCP resource path traversal attempt"
+    },
+    {
+      "pattern": "mcp.*proxy.*bypass",
+      "severity": "High", 
+      "action": "block",
+      "reason": "MCP proxy security bypass attempt"
+    },
+    {
+      "pattern": "\"method\"\\s*:\\s*\"tools/call\".*\"name\"\\s*:\\s*\"[^\"]*shell[^\"]*\"",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "MCP shell access tool"
+    },
+    {
+      "pattern": "\"arguments\".*\"--privileged|--user.*root\"",
+      "severity": "Critical", 
+      "action": "block",
+      "reason": "Privilege escalation via MCP arguments"
+    },
+    {
+      "pattern": "\"uri\"\\s*:\\s*\"[^\"]*\\.\\./.*config|passwd|shadow\"",
+      "severity": "Critical",
+      "action": "block", 
+      "reason": "Sensitive system file access via MCP"
+    },
+    {
+      "pattern": "nc\\s+-e\\s+/bin/(bash|sh)",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Netcat reverse shell command"
+    },
+    {
+      "pattern": "subprocess.*shell=True.*f['\"].*\\{.*\\}",
+      "severity": "Critical", 
+      "action": "block",
+      "reason": "Dynamic shell command with user input"
+    },
+    {
+      "pattern": ";\\s*(nc|netcat|telnet).*\\d+\\.\\d+\\.\\d+\\.\\d+",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Command injection with network connection"
+    },
+    {
+      "pattern": "\\{(host|target|options)\\}.*subprocess.*shell",
+      "severity": "Critical",
+      "action": "block", 
+      "reason": "User input in shell subprocess call"
+    }
+  ]
+}

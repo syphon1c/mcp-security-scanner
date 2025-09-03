@@ -1,0 +1,132 @@
+# Example MCP Security Scanner Configuration
+# This file demonstrates how to configure the MCP Security Scanner with environment variables
+
+# Scanner Configuration
+scanner:
+  # Directory containing security policies
+  policy_directory: ${POLICY_DIR:./policies}
+  
+  # Default policy to use when none specified
+  default_policy: ${DEFAULT_POLICY:critical-security}
+  
+  # Maximum number of concurrent scanning jobs
+  max_concurrent_jobs: ${MAX_CONCURRENT_JOBS:5}
+  
+  # Timeout for scanner operations
+  timeout: ${SCANNER_TIMEOUT:30s}
+  
+  # Maximum number of retries for failed operations
+  max_retries: ${MAX_RETRIES:3}
+  
+  # User agent string for HTTP requests
+  user_agent: ${USER_AGENT:MCP-Security-Scanner/1.0.0}
+  
+  # Logging level for scanner operations
+  log_level: ${LOG_LEVEL:INFO}
+  
+  # Output configuration
+  output:
+    # Default output format (json, html, pdf, text)
+    default_format: ${OUTPUT_FORMAT:json}
+    
+    # Directory for saving reports
+    directory: ${OUTPUT_DIR:./reports}
+    
+    # Base filename for generated reports
+    filename_base: ${FILENAME_BASE:mcp_security_report}
+
+# Proxy Configuration
+proxy:
+  # Host address for the proxy server
+  host: ${PROXY_HOST:localhost}
+  
+  # Port for the proxy server
+  port: ${PROXY_PORT:8080}
+  
+  # Timeout for proxy operations
+  timeout: ${PROXY_TIMEOUT:30s}
+  
+  # Maximum buffer size in MB for proxy operations
+  max_buffer_mb: ${MAX_BUFFER_MB:10}
+  
+  # Enable TLS/SSL for the proxy
+  enable_tls: ${ENABLE_TLS:false}
+  
+  # Certificate file for TLS (required if enable_tls is true)
+  cert_file: ${CERT_FILE:}
+  
+  # Private key file for TLS (required if enable_tls is true)
+  key_file: ${KEY_FILE:}
+  
+  # Webhook URL for real-time alerts
+  alert_webhook: ${ALERT_WEBHOOK:}
+
+# Integration Configuration
+integration:
+  # SIEM Integration
+  siem:
+    # Enable SIEM integration
+    enabled: ${SIEM_ENABLED:false}
+    
+    # SIEM API endpoint
+    endpoint: ${SIEM_ENDPOINT:}
+    
+    # SIEM API key for authentication
+    api_key: ${SIEM_API_KEY:}
+    
+    # Index/destination for SIEM events
+    index: ${SIEM_INDEX:mcp-security}
+  
+  # SOAR Integration
+  soar:
+    # Enable SOAR integration
+    enabled: ${SOAR_ENABLED:false}
+    
+    # SOAR API endpoint
+    endpoint: ${SOAR_ENDPOINT:}
+    
+    # SOAR API key for authentication
+    api_key: ${SOAR_API_KEY:}
+    
+    # Username for SOAR authentication
+    username: ${SOAR_USERNAME:}
+  
+  # Slack Notifications
+  slack:
+    # Enable Slack notifications
+    enabled: ${SLACK_ENABLED:false}
+    
+    # Slack webhook URL
+    webhook_url: ${SLACK_WEBHOOK_URL:}
+    
+    # Slack channel for notifications
+    channel: ${SLACK_CHANNEL:#security-alerts}
+    
+    # Bot username for Slack messages
+    username: ${SLACK_USERNAME:MCP Security Scanner}
+    
+    # Icon emoji for Slack messages
+    icon_emoji: ${SLACK_ICON::shield:}
+    
+    # Minimum severity level for Slack notifications
+    min_severity: ${SLACK_MIN_SEVERITY:HIGH}
+
+# Logging Configuration
+logging:
+  # Log level (DEBUG, INFO, WARN, ERROR)
+  level: ${LOG_LEVEL:INFO}
+  
+  # Log format (json, text)
+  format: ${LOG_FORMAT:json}
+  
+  # Log output destination (stdout, stderr, file path)
+  output: ${LOG_OUTPUT:stdout}
+  
+  # Maximum log file size in MB (for file output)
+  max_size_mb: ${LOG_MAX_SIZE_MB:100}
+  
+  # Maximum number of old log files to retain
+  max_backups: ${LOG_MAX_BACKUPS:3}
+  
+  # Maximum number of days to retain log files
+  max_age: ${LOG_MAX_AGE:30}

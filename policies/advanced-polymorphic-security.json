@@ -1,0 +1,176 @@
+{
+  "version": "1.0.0",
+  "policyName": "advanced-polymorphic-security",
+  "description": "Advanced security policy with polymorphic and behavioral pattern detection",
+  "severity": "High",
+  "riskThresholds": {
+    "critical": 50,
+    "high": 30,
+    "medium": 15,
+    "low": 5
+  },
+  "rules": [
+    {
+      "id": "BASIC_INJECTION_001",
+      "name": "Basic Command Injection",
+      "description": "Detects basic command injection patterns",
+      "category": "Injection",
+      "severity": "High",
+      "patterns": [
+        "exec\\s*\\(",
+        "system\\s*\\(",
+        "os\\.system"
+      ]
+    }
+  ],
+  "polymorphicPatterns": [
+    {
+      "name": "command_injection_variants",
+      "description": "Polymorphic command injection patterns that can evade basic detection",
+      "severity": "Critical",
+      "category": "Advanced Injection",
+      "threshold": 2,
+      "variants": [
+        "exec\\s*\\(\\s*[\"'].*[\"']",
+        "system\\s*\\(\\s*[\"'].*[\"']",
+        "os\\.system\\s*\\(",
+        "subprocess\\.(run|call|Popen)",
+        "eval\\s*\\(\\s*[\"'].*exec.*[\"']",
+        "getattr\\s*\\(\\s*__builtins__.*exec",
+        "compile\\s*\\(.*exec",
+        "__import__\\s*\\(\\s*[\"']os[\"']",
+        "eval\\s*\\(\\s*base64\\.b64decode",
+        "exec\\s*\\(\\s*codecs\\.decode",
+        "eval\\s*\\(\\s*bytes\\.fromhex",
+        "[\"']ex[\"'].*\\+.*[\"']ec[\"']",
+        "chr\\(101\\).*chr\\(120\\).*chr\\(101\\).*chr\\(99\\)",
+        "\\\\x65\\\\x78\\\\x65\\\\x63"
+      ]
+    },
+    {
+      "name": "sql_injection_variants",
+      "description": "Polymorphic SQL injection patterns including obfuscated variants",
+      "severity": "High",
+      "category": "Advanced Injection",
+      "threshold": 2,
+      "variants": [
+        "UNION\\s+SELECT",
+        "OR\\s+1\\s*=\\s*1",
+        "AND\\s+1\\s*=\\s*1",
+        "'\\s*OR\\s*'1'\\s*=\\s*'1",
+        "UN/\\*\\*/ION\\s+SE/\\*\\*/LECT",
+        "OR\\s+0x31\\s*=\\s*0x31",
+        "OR\\s+CHAR\\(49\\)\\s*=\\s*CHAR\\(49\\)",
+        "WAITFOR\\s+DELAY",
+        "SLEEP\\s*\\(\\s*\\d+\\s*\\)",
+        "pg_sleep\\s*\\(\\s*\\d+\\s*\\)",
+        "CASE\\s+WHEN.*THEN.*ELSE",
+        "IF\\s*\\(.*,.*,.*\\)",
+        "IIF\\s*\\(.*,.*,.*\\)"
+      ]
+    },
+    {
+      "name": "xss_variants",
+      "description": "Polymorphic XSS patterns including encoded and obfuscated variants",
+      "severity": "Medium",
+      "category": "Cross-Site Scripting",
+      "threshold": 2,
+      "variants": [
+        "<script.*>.*</script>",
+        "javascript:",
+        "on\\w+\\s*=\\s*[\"'].*[\"']",
+        "<scr\\+ipt>",
+        "<script/.*>",
+        "<script\\s+.*>",
+        "&#x6A;&#x61;&#x76;&#x61;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;",
+        "on(load|error|click|mouseover)\\s*=",
+        "on\\w+\\s*=\\s*alert",
+        "on\\w+\\s*=\\s*confirm",
+        "data:text/html.*<script",
+        "data:application/javascript",
+        "data:text/javascript"
+      ]
+    }
+  ],
+  "behavioralPatterns": [
+    {
+      "name": "excessive_network_activity",
+      "description": "Detects excessive network activity patterns that may indicate malicious behavior",
+      "severity": "Medium",
+      "category": "Behavioral Analysis",
+      "threshold": 5,
+      "patterns": [
+        "requests\\.get\\(",
+        "urllib\\.request\\.urlopen\\(",
+        "http\\.client\\.HTTPConnection\\(",
+        "socket\\.socket\\(",
+        "telnetlib\\.Telnet\\(",
+        "ftplib\\.FTP\\(",
+        "smtplib\\.SMTP\\("
+      ]
+    },
+    {
+      "name": "suspicious_file_operations",
+      "description": "Detects suspicious file operation patterns",
+      "severity": "High",
+      "category": "File System Security",
+      "threshold": 3,
+      "patterns": [
+        "open\\s*\\(\\s*[\"']/etc/",
+        "open\\s*\\(\\s*[\"']/var/log/",
+        "open\\s*\\(\\s*[\"']/proc/",
+        "os\\.remove\\(",
+        "shutil\\.rmtree\\(",
+        "os\\.chmod\\(.*777",
+        "os\\.chown\\("
+      ]
+    },
+    {
+      "name": "crypto_mining_behavior",
+      "description": "Detects potential cryptocurrency mining behavior patterns",
+      "severity": "Medium",
+      "category": "Resource Abuse",
+      "threshold": 3,
+      "patterns": [
+        "hashlib\\.(sha256|md5|blake2b)",
+        "random\\.randint\\(.*100000",
+        "while\\s+True:.*hash",
+        "multiprocessing\\.Pool\\(",
+        "threading\\.Thread\\(.*target=.*mine",
+        "gpu.*cuda",
+        "opencl"
+      ]
+    },
+    {
+      "name": "persistence_mechanisms",
+      "description": "Detects persistence mechanism patterns",
+      "severity": "High",
+      "category": "Persistence",
+      "threshold": 2,
+      "patterns": [
+        "crontab\\s+-e",
+        "/etc/rc\\.local",
+        "/etc/init\\.d/",
+        "systemctl\\s+enable",
+        "chkconfig\\s+--add",
+        "HKEY_CURRENT_USER.*Run",
+        "HKEY_LOCAL_MACHINE.*Run",
+        "startup\\s+folder"
+      ]
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "rm -rf /",
+      "type": "exact",
+      "category": "Destructive Commands",
+      "description": "Blocks destructive file system commands"
+    },
+    {
+      "pattern": "DROP TABLE",
+      "type": "contains",
+      "category": "SQL Commands",
+      "description": "Blocks destructive SQL commands"
+    }
+  ]
+}

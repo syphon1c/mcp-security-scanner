@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "policyName": "org-custom-template",
+  "description": "Template policy for organisation-specific customisation - Copy and modify for your needs",
+  "severity": "Medium",
+  "author": "Organisation Security Team",
+  "created": "2025-09-02",
+  "rules": [
+    {
+      "id": "ORG_001",
+      "name": "Custom Data Pattern Detection",
+      "description": "Template rule for detecting organisation-specific sensitive data patterns",
+      "category": "Data Protection",
+      "severity": "Medium",
+      "patterns": [
+        "\\b(TEMPLATE|EXAMPLE)[-_]?\\d{4,}\\b",
+        "\\b(your[-_]?org[-_]?pattern)\\b"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "ORG_002", 
+      "name": "Custom API Endpoint Protection",
+      "description": "Template rule for protecting organisation-specific API endpoints",
+      "category": "API Security",
+      "severity": "High",
+      "patterns": [
+        "/internal/",
+        "/admin/sensitive",
+        "/api/v[0-9]+/confidential"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "ORG_003",
+      "name": "Custom Command Injection Prevention",
+      "description": "Template rule for preventing organisation-specific command injection patterns",
+      "category": "Command Injection",
+      "severity": "Critical", 
+      "patterns": [
+        "\\b(custom_system_command)\\s*\\(",
+        "\\b(org_specific_exec)\\s*\\("
+      ],
+      "enabled": true
+    },
+    {
+      "id": "ORG_004",
+      "name": "Custom File Access Control",
+      "description": "Template rule for controlling access to organisation-specific file paths",
+      "category": "Path Traversal",
+      "severity": "High",
+      "patterns": [
+        "/company/confidential/",
+        "\\.\\./.*company[-_]data/",
+        "/org[-_]secrets/"
+      ],
+      "enabled": true
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "\\b(TEMPLATE|EXAMPLE)[-_]?\\d{4,}\\b",
+      "action": "block",
+      "message": "Organisation template pattern detected - customize this rule"
+    }
+  ],
+  "riskThresholds": {
+    "critical": 50,
+    "high": 30,
+    "medium": 15,
+    "low": 5
+  },
+  "metadata": {
+    "documentation": "This is a template policy file. Copy it to create your own organisation-specific policy.",
+    "customisation_notes": [
+      "1. Change the policyName to your organisation name (e.g., 'acme-corp-security')",
+      "2. Update the description and author fields",
+      "3. Modify rule patterns to match your organisation's specific data formats",
+      "4. Add new rules as needed for your security requirements",
+      "5. Adjust severity levels and risk thresholds to match your risk tolerance",
+      "6. Test your custom policy thoroughly before deploying to production"
+    ],
+    "pattern_examples": {
+      "employee_ids": "\\b(EMP|EMPL)[-_]?\\d{6}\\b",
+      "project_codes": "\\b(PROJ|PRJ)[-_]?[A-Z]{2,4}[-_]?\\d{3,6}\\b",
+      "api_keys": "\\b[A-Za-z0-9]{32,64}\\b",
+      "internal_urls": "/internal/|/admin/|/mgmt/"
+    }
+  }
+}

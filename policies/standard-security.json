@@ -1,0 +1,191 @@
+{
+  "policyName": "standard-security",
+  "version": "1.0",
+  "description": "Standard security checks for general MCP server assessment",
+  "riskThresholds": {
+    "critical": 50,
+    "high": 30,
+    "medium": 15,
+    "low": 5
+  },
+  "rules": [
+    {
+      "id": "MCP_TOOL_POISON_001",
+      "category": "mcp_specific",
+      "severity": "Critical",
+      "title": "MCP Tool Poisoning Detection",
+      "description": "Detects deceptive MCP tool definitions that hide malicious functionality",
+      "patterns": [
+        "\"name\"\\s*:\\s*\"[^\"]*help[^\"]*\".*\"inputSchema\".*\"command\"",
+        "\"name\"\\s*:\\s*\"[^\"]*safe[^\"]*\".*exec|system|shell",
+        "\"description\"\\s*:\\s*\"[^\"]*harmless[^\"]*\".*subprocess",
+        "\"name\"\\s*:\\s*\"[^\"]*read[_-]?file[^\"]*\".*\"shell\"\\s*:\\s*true",
+        "\"description\"\\s*:\\s*\"[^\"]*simple[^\"]*\".*dangerous",
+        "\"name\"\\s*:\\s*\"[^\"]*utility[^\"]*\".*\"exec\"\\s*:\\s*true",
+        "\"description\"\\s*:\\s*\"[^\"]*read[_-]?only[^\"]*\".*\"write|delete|modify\"",
+        "\"name\"\\s*:\\s*\"[^\"]*test[^\"]*\".*\"production|prod|live\"",
+        "\"inputSchema\".*\"type\"\\s*:\\s*\"string\".*\"shell|command|exec\""
+      ]
+    },
+    {
+      "id": "INJECTION_001",
+      "category": "injection",
+      "severity": "High",
+      "title": "Command Injection",
+      "description": "Detects potential command injection vulnerabilities",
+      "patterns": [
+        "exec\\s*\\(",
+        "system\\s*\\(",
+        "subprocess\\.(run|call|Popen)",
+        "os\\.system\\s*\\(",
+        "eval\\s*\\(",
+        "\\$\\(.*\\)",
+        "`.*`"
+      ]
+    },
+    {
+      "id": "INJECTION_002", 
+      "category": "injection",
+      "severity": "Medium",
+      "title": "SQL Injection",
+      "description": "Detects potential SQL injection vulnerabilities",
+      "patterns": [
+        "UNION\\s+SELECT",
+        "OR\\s+1\\s*=\\s*1",
+        "'\\s*OR\\s*'",
+        "DROP\\s+TABLE",
+        "INSERT\\s+INTO",
+        "UPDATE\\s+.*\\s+SET",
+        "DELETE\\s+FROM"
+      ]
+    },
+    {
+      "id": "FILE_ACCESS_001",
+      "category": "file_access", 
+      "severity": "Medium",
+      "title": "Path Traversal",
+      "description": "Detects path traversal vulnerabilities",
+      "patterns": [
+        "\\.\\./",
+        "\\.\\.\\\\",
+        "%2e%2e%2f",
+        "%2e%2e\\\\",
+        "/etc/passwd",
+        "/etc/shadow",
+        "\\\\windows\\\\system32"
+      ]
+    },
+    {
+      "id": "CRYPTOGRAPHY_001",
+      "category": "cryptography",
+      "severity": "Medium", 
+      "title": "Weak Cryptography",
+      "description": "Detects weak cryptographic implementations",
+      "patterns": [
+        "md5\\s*\\(",
+        "sha1\\s*\\(",
+        "DES\\s*\\(",
+        "RC4\\s*\\(",
+        "Math\\.random\\(\\)",
+        "Random\\(\\)"
+      ]
+    },
+    {
+      "id": "AUTHENTICATION_001",
+      "category": "authentication",
+      "severity": "Low",
+      "title": "Authentication Issues",
+      "description": "Detects potential authentication issues",
+      "patterns": [
+        "auth\\s*=\\s*false",
+        "bypass.*auth",
+        "password\\s*=\\s*\"\"",
+        "token\\s*=\\s*\"\""
+      ]
+    },
+    {
+      "id": "SENSITIVE_DATA_001",
+      "category": "data_access",
+      "severity": "Medium",
+      "title": "Sensitive Data Exposure", 
+      "description": "Detects potential sensitive data exposure",
+      "patterns": [
+        "api_key\\s*=",
+        "secret\\s*=",
+        "password\\s*=",
+        "private_key\\s*=",
+        "access_token\\s*="
+      ]
+    },
+    {
+      "id": "LOGGING_001",
+      "category": "configuration",
+      "severity": "Low",
+      "title": "Insecure Logging",
+      "description": "Detects insecure logging practices",
+      "patterns": [
+        "console\\.log\\(.*password",
+        "print\\(.*password",
+        "log\\.info\\(.*secret",
+        "debug\\s*=\\s*true"
+      ]
+    },
+    {
+      "id": "INPUT_VALIDATION_001",
+      "category": "validation",
+      "severity": "Medium",
+      "title": "Input Validation Issues",
+      "description": "Detects missing input validation",
+      "patterns": [
+        "req\\.body\\[.*\\].*without.*validation",
+        "params\\[.*\\].*direct.*use",
+        "input.*not.*validated",
+        "user.*input.*unfiltered"
+      ]
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "rm\\s+-rf",
+      "severity": "High",
+      "action": "block",
+      "reason": "Destructive command detected"
+    },
+    {
+      "pattern": "DROP\\s+DATABASE",
+      "severity": "High", 
+      "action": "block",
+      "reason": "Database destruction command detected"
+    },
+    {
+      "pattern": "/etc/passwd",
+      "severity": "Medium",
+      "action": "block",
+      "reason": "System file access attempt detected"
+    },
+    {
+      "pattern": "eval\\s*\\(",
+      "severity": "High",
+      "action": "block",
+      "reason": "Code evaluation detected"
+    },
+    {
+      "pattern": "\"tools/call\".*\"name\"\\s*:\\s*\"[^\"]*exec[^\"]*\"",
+      "severity": "Critical",
+      "action": "block", 
+      "reason": "Dangerous MCP tool execution detected"
+    },
+    {
+      "pattern": "\"method\"\\s*:\\s*\"tools/call\".*\"name\"\\s*:\\s*\"[^\"]*shell[^\"]*\"",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Shell access via MCP tool detected"
+    },
+    {
+      "pattern": "\"uri\"\\s*:\\s*\"[^\"]*\\.\\./.*config|passwd|shadow\"",
+      "severity": "Critical",
+      "action": "block", 
+      "reason": "Sensitive system file access via MCP resource"
+    }
+  ]
+}

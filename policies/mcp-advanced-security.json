@@ -1,0 +1,219 @@
+{
+  "policyName": "mcp-advanced-security",
+  "version": "1.1.0",
+  "description": "Advanced MCP-specific security policy with protocol attack detection",
+  "riskThresholds": {
+    "critical": 50,
+    "high": 30,
+    "medium": 15,
+    "low": 5
+  },
+  "rules": [
+    {
+      "id": "MCP_TOOL_POISONING_001",
+      "category": "MCP Protocol Abuse",
+      "severity": "Critical",
+      "title": "Tool Parameter Injection",
+      "description": "Detects potential tool parameter injection attempts",
+      "patterns": [
+        "_override\\s*[=:]",
+        "_redirect\\s*[=:]",
+        "_inject\\s*[=:]",
+        "_exec\\s*[=:]",
+        "__proto__\\s*[=:]",
+        "constructor\\.name",
+        "prototype\\.valueOf"
+      ]
+    },
+    {
+      "id": "MCP_TOOL_POISONING_002", 
+      "category": "MCP Protocol Abuse",
+      "severity": "High",
+      "title": "Tool Context Manipulation",
+      "description": "Detects attempts to manipulate tool execution context",
+      "patterns": [
+        "_context\\s*[=:]",
+        "_env\\s*[=:]",
+        "_privileges\\s*[=:]",
+        "_capabilities\\s*[=:]",
+        "_sandbox\\s*[=:].*false",
+        "_chroot\\s*[=:].*\\/",
+        "_escape_vector"
+      ]
+    },
+    {
+      "id": "MCP_RESOURCE_MANIPULATION_001",
+      "category": "MCP Protocol Abuse", 
+      "severity": "High",
+      "title": "Resource URI Manipulation",
+      "description": "Detects malicious resource URI manipulation",
+      "patterns": [
+        "\\.\\.\\/.*\\/etc\\/passwd",
+        "%2e%2e%2f.*%2fetc%2fpasswd",
+        "file:\\/\\/\\/",
+        "ftp:\\/\\/.*\\/",
+        "javascript:",
+        "vbscript:",
+        "jar:http:",
+        "gopher:\\/\\/",
+        "169\\.254\\.169\\.254"
+      ]
+    },
+    {
+      "id": "MCP_RESOURCE_MANIPULATION_002",
+      "category": "MCP Protocol Abuse",
+      "severity": "Medium", 
+      "title": "Resource Content Injection",
+      "description": "Detects content injection in MCP resources",
+      "patterns": [
+        "__proto__.*isAdmin",
+        "constructor.*prototype",
+        "\\$ref.*javascript:",
+        "<!DOCTYPE.*ENTITY.*SYSTEM",
+        "<script>.*alert\\(",
+        "<iframe.*javascript:",
+        "<img.*onerror="
+      ]
+    },
+    {
+      "id": "MCP_SCHEMA_MANIPULATION_001",
+      "category": "MCP Protocol Abuse",
+      "severity": "High",
+      "title": "Schema Manipulation Attack", 
+      "description": "Detects attempts to manipulate MCP tool schemas",
+      "patterns": [
+        "inputSchema.*\\$ref.*javascript:",
+        "inputSchema.*additionalCode",
+        "schema_override",
+        "inputSchema.*require\\(.*child_process",
+        "inputSchema.*eval\\(",
+        "inputSchema.*Function\\("
+      ]
+    },
+    {
+      "id": "MCP_PROTOCOL_BYPASS_001",
+      "category": "MCP Protocol Abuse",
+      "severity": "Critical",
+      "title": "MCP Protocol Bypass",
+      "description": "Detects attempts to bypass MCP protocol restrictions",
+      "patterns": [
+        "X-HTTP-Method-Override",
+        "X-Method-Override", 
+        "X-Admin.*true",
+        "X-User-Role.*admin",
+        "X-Privilege.*admin",
+        "X-Access-Level.*full",
+        "Authorization.*Bearer.*admin"
+      ]
+    },
+    {
+      "id": "MCP_INJECTION_ADVANCED_001",
+      "category": "injection",
+      "severity": "Critical", 
+      "title": "Advanced Command Injection",
+      "description": "Advanced command injection patterns specific to MCP environments",
+      "patterns": [
+        "\\$\\(.*whoami.*\\)",
+        "\\$\\{env:.*\\}",
+        "`.*id.*`",
+        ";\\s*cat\\s+\\/etc\\/passwd",
+        ";\\s*rm\\s+-rf\\s+\\/",
+        "require\\(['\"]child_process['\"]\\)",
+        "process\\.env\\[.*\\]",
+        "os\\.system\\(",
+        "subprocess\\.(run|call|Popen).*shell=True"
+      ]
+    },
+    {
+      "id": "MCP_RESOURCE_EXHAUSTION_001",
+      "category": "MCP Protocol Abuse",
+      "severity": "Medium",
+      "title": "Resource Exhaustion Attack",
+      "description": "Detects attempts to cause resource exhaustion",
+      "patterns": [
+        "memory.*999GB",
+        "cpu.*100%",
+        "processes.*99999",
+        "files.*99999",
+        "limits.*unlimited",
+        "for\\s+i\\s+in\\s+range\\(.*10000",
+        "while\\s+True:",
+        "setInterval\\(.*1\\)"
+      ]
+    },
+    {
+      "id": "MCP_PRIVILEGE_ESCALATION_001",
+      "category": "MCP Protocol Abuse", 
+      "severity": "Critical",
+      "title": "Privilege Escalation Attempt",
+      "description": "Detects privilege escalation attempts in MCP context",
+      "patterns": [
+        "user.*root",
+        "group.*wheel",
+        "CAP_SYS_ADMIN",
+        "CAP_NET_ADMIN", 
+        "sudo.*-u.*root",
+        "setuid\\(0\\)",
+        "setgid\\(0\\)",
+        "chmod.*777.*",
+        "chown.*root:"
+      ]
+    },
+    {
+      "id": "MCP_DATA_EXFILTRATION_001",
+      "category": "data_access",
+      "severity": "High",
+      "title": "Data Exfiltration Pattern",
+      "description": "Detects potential data exfiltration attempts",
+      "patterns": [
+        "curl.*http.*\\/etc\\/passwd",
+        "wget.*http.*\\/etc\\/shadow",
+        "nc.*-e.*\\/bin\\/bash",
+        "telnet.*23",
+        "ftp.*anonymous",
+        "scp.*root@",
+        "rsync.*ssh",
+        "base64.*\\/etc\\/",
+        "gzip.*\\/var\\/log"
+      ]
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "_override\\s*[=:]",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Tool override attempt detected"
+    },
+    {
+      "pattern": "_redirect\\s*[=:]",
+      "severity": "Critical", 
+      "action": "block",
+      "reason": "Tool redirect attempt detected"
+    },
+    {
+      "pattern": "javascript:",
+      "severity": "High",
+      "action": "block", 
+      "reason": "JavaScript protocol usage detected"
+    },
+    {
+      "pattern": "file:\\/\\/\\/",
+      "severity": "High",
+      "action": "block",
+      "reason": "Local file access attempt detected"
+    },
+    {
+      "pattern": "__proto__",
+      "severity": "High",
+      "action": "block",
+      "reason": "Prototype pollution attempt detected"
+    },
+    {
+      "pattern": ";\\s*rm\\s+-rf",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Destructive command detected"
+    }
+  ]
+}
