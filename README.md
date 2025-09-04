@@ -73,6 +73,8 @@ go build -o mcpscan
 ./mcpscan policies
 ```
 
+![Local Scanner Demo](docs/media/mcp_local_scanner.gif)
+
 ### Advanced Examples
 
 ```bash
@@ -213,8 +215,6 @@ mcp-security/
 └── reports/              # Default output directory
 ```
 
-
-![Local Scanner Demo](docs/media/mcp_local_scanner.gif)
 
 ## Support
 
