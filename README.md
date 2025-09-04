@@ -93,15 +93,8 @@ go build -o mcpscan
 
 The proxy provides transparent security monitoring for MCP traffic:
 
-<details>
-<summary>Live Monitoring Proxy Demo (mp4)</summary>
 
-<video width="600" controls>
-  <source src="docs/media/mcp_proxy_mode.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-</details>
+![Live Monitoring Proxy Demo](docs/media/mcp_proxy_mode.gif)
 
 ```bash
 # Start proxy with advanced security policy
@@ -220,15 +213,8 @@ mcp-security/
 └── reports/              # Default output directory
 ```
 
-<details>
-<summary>Local Scanner Demo (mp4)</summary>
 
-<video width="600" controls>
-  <source src="docs/media/mcp_local_scanner.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-</details>
+![Local Scanner Demo](docs/media/mcp_local_scanner.gif)
 
 ## Support
 
