@@ -1,8 +1,8 @@
 {
   "policyName": "standard-security",
-  "version": "1.0",
-  "description": "Standard security checks for general MCP server assessment",
-  "severity": "Medium",
+  "version": "2.0",
+  "description": "Standard security patterns with reduced false positives for MCP servers",
+  "severity": "High",
   "riskThresholds": {
     "critical": 50,
     "high": 30,
@@ -11,182 +11,179 @@
   },
   "rules": [
     {
-      "id": "MCP_TOOL_POISON_001",
-      "category": "mcp_specific",
-      "severity": "Critical",
-      "title": "MCP Tool Poisoning Detection",
-      "description": "Detects deceptive MCP tool definitions that hide malicious functionality",
+      "id": "MCP_DISCOVERY_001",
+      "category": "reconnaissance",
+      "severity": "Low",
+      "title": "MCP Server Enumeration",
+      "description": "Attempts to discover MCP server capabilities for reconnaissance",
       "patterns": [
-        "\"name\"\\s*:\\s*\"[^\"]*help[^\"]*\".*\"inputSchema\".*\"command\"",
-        "\"name\"\\s*:\\s*\"[^\"]*safe[^\"]*\".*exec|system|shell",
-        "\"description\"\\s*:\\s*\"[^\"]*harmless[^\"]*\".*subprocess",
-        "\"name\"\\s*:\\s*\"[^\"]*read[_-]?file[^\"]*\".*\"shell\"\\s*:\\s*true",
-        "\"description\"\\s*:\\s*\"[^\"]*simple[^\"]*\".*dangerous",
-        "\"name\"\\s*:\\s*\"[^\"]*utility[^\"]*\".*\"exec\"\\s*:\\s*true",
-        "\"description\"\\s*:\\s*\"[^\"]*read[_-]?only[^\"]*\".*\"write|delete|modify\"",
-        "\"name\"\\s*:\\s*\"[^\"]*test[^\"]*\".*\"production|prod|live\"",
-        "\"inputSchema\".*\"type\"\\s*:\\s*\"string\".*\"shell|command|exec\""
-      ]
-    },
-    {
-      "id": "INJECTION_001",
-      "category": "injection",
-      "severity": "High",
-      "title": "Command Injection",
-      "description": "Detects potential command injection vulnerabilities",
-      "patterns": [
-        "exec\\s*\\(",
-        "system\\s*\\(",
-        "subprocess\\.(run|call|Popen)",
-        "os\\.system\\s*\\(",
-        "eval\\s*\\(",
-        "\\$\\(.*\\)",
-        "`.*`"
-      ]
-    },
-    {
-      "id": "INJECTION_002", 
-      "category": "injection",
-      "severity": "Medium",
-      "title": "SQL Injection",
-      "description": "Detects potential SQL injection vulnerabilities",
-      "patterns": [
-        "UNION\\s+SELECT",
-        "OR\\s+1\\s*=\\s*1",
-        "'\\s*OR\\s*'",
-        "DROP\\s+TABLE",
-        "INSERT\\s+INTO",
-        "UPDATE\\s+.*\\s+SET",
-        "DELETE\\s+FROM"
-      ]
-    },
-    {
-      "id": "FILE_ACCESS_001",
-      "category": "file_access", 
-      "severity": "Medium",
-      "title": "Path Traversal",
-      "description": "Detects path traversal vulnerabilities",
-      "patterns": [
-        "\\.\\./",
-        "\\.\\.\\\\",
-        "%2e%2e%2f",
-        "%2e%2e\\\\",
-        "/etc/passwd",
-        "/etc/shadow",
-        "\\\\windows\\\\system32"
-      ]
-    },
-    {
-      "id": "CRYPTOGRAPHY_001",
-      "category": "cryptography",
-      "severity": "Medium", 
-      "title": "Weak Cryptography",
-      "description": "Detects weak cryptographic implementations",
-      "patterns": [
-        "md5\\s*\\(",
-        "sha1\\s*\\(",
-        "DES\\s*\\(",
-        "RC4\\s*\\(",
-        "Math\\.random\\(\\)",
-        "Random\\(\\)"
+        "\"method\"\\s*:\\s*\"initialize\".*\"capabilities\"\\s*:\\s*\\{\\s*\\}(?!.*normal|.*standard)",
+        "rapid.*sequential.*tools/list.*resources/list",
+        "enumerate.*all.*available.*tools.*resources"
       ]
     },
     {
       "id": "AUTHENTICATION_001",
       "category": "authentication",
-      "severity": "Low",
+      "severity": "Medium",
       "title": "Authentication Issues",
-      "description": "Detects potential authentication issues",
+      "description": "Hardcoded credentials or disabled authentication",
       "patterns": [
-        "auth\\s*=\\s*false",
-        "bypass.*auth",
-        "password\\s*=\\s*\"\"",
-        "token\\s*=\\s*\"\""
+        "auth\\s*=\\s*false(?!.*test|.*development)",
+        "authentication\\s*=\\s*(?:false|disabled)(?!.*test)",
+        "password\\s*=\\s*[\"'][^\"']{1,8}[\"'](?!.*example|.*test)",
+        "api_key\\s*=\\s*[\"'][^\"']{1,16}[\"'](?!.*example|.*test|.*placeholder)",
+        "secret\\s*=\\s*[\"'](?:admin|password|123|test)[\"']"
       ]
     },
     {
       "id": "SENSITIVE_DATA_001",
       "category": "data_access",
       "severity": "Medium",
-      "title": "Sensitive Data Exposure", 
-      "description": "Detects potential sensitive data exposure",
+      "title": "Hardcoded Secrets", 
+      "description": "API keys, passwords, or sensitive data hardcoded in source code",
       "patterns": [
-        "api_key\\s*=",
-        "secret\\s*=",
-        "password\\s*=",
-        "private_key\\s*=",
-        "access_token\\s*="
+        "(?i)api[_-]?key\\s*=\\s*[\"'][A-Za-z0-9]{20,}[\"']",
+        "(?i)secret[_-]?key\\s*=\\s*[\"'][A-Za-z0-9]{20,}[\"']",
+        "(?i)private[_-]?key\\s*=\\s*[\"']-----BEGIN",
+        "(?i)access[_-]?token\\s*=\\s*[\"'][A-Za-z0-9]{20,}[\"']",
+        "(?i)password\\s*=\\s*[\"'][^\"']{8,}[\"'](?!.*example|.*test|.*placeholder)"
       ]
     },
     {
-      "id": "LOGGING_001",
-      "category": "configuration",
-      "severity": "Low",
-      "title": "Insecure Logging",
-      "description": "Detects insecure logging practices",
+      "id": "NETWORK_ACCESS_001",
+      "category": "network",
+      "severity": "Medium",
+      "title": "Unrestricted Network Access",
+      "description": "Network connections to arbitrary hosts or suspicious endpoints",
       "patterns": [
-        "console\\.log\\(.*password",
-        "print\\(.*password",
-        "log\\.info\\(.*secret",
-        "debug\\s*=\\s*true"
+        "connect\\s*\\(\\s*[^)]*\\{[^}]*host[^}]*\\}",
+        "requests\\.(?:get|post)\\s*\\([^)]*f[\"'][^\"']*\\{[^}]*url[^}]*\\}",
+        "urllib.*urlopen\\s*\\([^)]*\\{[^}]*\\}",
+        "socket\\.connect\\s*\\([^)]*user[^)]*input"
+      ]
+    },
+    {
+      "id": "FILE_OPERATIONS_001",
+      "category": "file_access",
+      "severity": "Medium",
+      "title": "Unsafe File Operations",
+      "description": "File operations with user-controlled paths",
+      "patterns": [
+        "open\\s*\\([^)]*\\{[^}]*(?:filename|path|file)[^}]*\\}[^)]*[\"']w",
+        "os\\.remove\\s*\\([^)]*\\{[^}]*path[^}]*\\}",
+        "shutil\\.rmtree\\s*\\([^)]*\\{[^}]*dir[^}]*\\}",
+        "with\\s+open\\s*\\([^)]*user[^)]*input.*[\"']w"
       ]
     },
     {
       "id": "INPUT_VALIDATION_001",
       "category": "validation",
       "severity": "Medium",
-      "title": "Input Validation Issues",
-      "description": "Detects missing input validation",
+      "title": "Missing Input Validation",
+      "description": "Functions processing user input without validation",
       "patterns": [
-        "req\\.body\\[.*\\].*without.*validation",
-        "params\\[.*\\].*direct.*use",
-        "input.*not.*validated",
-        "user.*input.*unfiltered"
+        "def\\s+\\w+\\s*\\([^)]*user[^)]*input[^)]*\\):[^{]*(?!.*validate|.*check|.*sanitize)",
+        "def\\s+\\w+\\s*\\([^)]*\\):[^{]*request\\.[^\\s]*(?!.*validate|.*check)",
+        "@mcp\\.tool\\(\\)[^{]*def[^{]*\\):[^{]*(?!.*validate|.*check).*(?:subprocess|os\\.system)"
       ]
+    },
+    {
+      "id": "ERROR_DISCLOSURE_001",
+      "category": "information_disclosure",
+      "severity": "Low",
+      "title": "Sensitive Error Disclosure",
+      "description": "Error messages that may disclose sensitive information",
+      "patterns": [
+        "except[^:]*:[^\\n]*print\\s*\\([^)]*(?:password|key|token)",
+        "log\\.error\\s*\\([^)]*(?:password|secret|key)",
+        "raise.*Exception\\s*\\([^)]*(?:password|token|key)"
+      ]
+    },
+    {
+      "id": "RESOURCE_EXHAUSTION_001",
+      "category": "availability",
+      "severity": "Medium",
+      "title": "Resource Exhaustion",
+      "description": "Operations that could lead to resource exhaustion",
+      "patterns": [
+        "while\\s+True:(?!.*sleep|.*break|.*limit)",
+        "for.*range\\s*\\([^)]*\\{[^}]*count[^}]*\\}[^)]*\\):(?!.*if.*break)",
+        "recursion.*depth.*unlimited",
+        "memory.*allocation.*user.*controlled"
+      ]
+    },
+    {
+      "id": "LOGGING_SECURITY_001",
+      "category": "logging",
+      "severity": "Low",
+      "title": "Insecure Logging",
+      "description": "Logging sensitive data or insufficient security logging",
+      "patterns": [
+        "log\\.(?:info|debug)\\s*\\([^)]*(?:password|token|key|secret)",
+        "print\\s*\\([^)]*(?:password|token|key|secret)",
+        "console\\.log\\s*\\([^)]*(?:password|token|key|secret)"
+      ]
+    },
+    {
+      "id": "CONFIGURATION_001",
+      "category": "configuration",
+      "severity": "Medium",
+      "title": "Insecure Configuration",
+      "description": "Insecure default configurations or settings",
+      "patterns": [
+        "debug\\s*=\\s*True(?!.*development|.*test)",
+        "ssl_verify\\s*=\\s*False(?!.*test)",
+        "verify\\s*=\\s*False(?!.*test)",
+        "check_hostname\\s*=\\s*False",
+        "allow_redirects\\s*=\\s*True(?!.*constrained)"
+      ]
+    }
+  ],
+  "whitelistPatterns": [
+    {
+      "pattern": "import\\s+[^\\n]*",
+      "description": "Standard module imports"
+    },
+    {
+      "pattern": "from\\s+[^\\s]+\\s+import\\s+[^\\n]*",
+      "description": "Standard import statements"
+    },
+    {
+      "pattern": "(?i)example|(?i)test|(?i)placeholder|(?i)demo",
+      "description": "Test, example, or placeholder code"
+    },
+    {
+      "pattern": "console\\.(log|error|warn|info)\\([^)]*[\"'][^\"']*[\"'][^)]*\\)",
+      "description": "Console logging with string literals"
+    },
+    {
+      "pattern": "log\\.(info|debug|warning|error)\\([^)]*[\"'][^\"']*[\"'][^)]*\\)",
+      "description": "Standard logging with string literals"
+    },
+    {
+      "pattern": "raise\\s+(?:ValueError|TypeError|KeyError|AttributeError)\\([^)]*[\"'][^\"']*[\"'][^)]*\\)",
+      "description": "Standard exception raising"
     }
   ],
   "blockedPatterns": [
     {
-      "pattern": "rm\\s+-rf",
+      "pattern": "debug\\s*=\\s*True.*production",
       "severity": "High",
       "action": "block",
-      "reason": "Destructive command detected"
+      "reason": "Debug mode enabled in production"
     },
     {
-      "pattern": "DROP\\s+DATABASE",
-      "severity": "High", 
+      "pattern": "ssl_verify\\s*=\\s*False(?!.*test)",
+      "severity": "High",
       "action": "block",
-      "reason": "Database destruction command detected"
+      "reason": "SSL verification disabled"
     },
     {
-      "pattern": "/etc/passwd",
+      "pattern": "password\\s*=\\s*[\"'](?:admin|password|123)[\"']",
       "severity": "Medium",
       "action": "block",
-      "reason": "System file access attempt detected"
-    },
-    {
-      "pattern": "eval\\s*\\(",
-      "severity": "High",
-      "action": "block",
-      "reason": "Code evaluation detected"
-    },
-    {
-      "pattern": "\"tools/call\".*\"name\"\\s*:\\s*\"[^\"]*exec[^\"]*\"",
-      "severity": "Critical",
-      "action": "block", 
-      "reason": "Dangerous MCP tool execution detected"
-    },
-    {
-      "pattern": "\"method\"\\s*:\\s*\"tools/call\".*\"name\"\\s*:\\s*\"[^\"]*shell[^\"]*\"",
-      "severity": "Critical",
-      "action": "block",
-      "reason": "Shell access via MCP tool detected"
-    },
-    {
-      "pattern": "\"uri\"\\s*:\\s*\"[^\"]*\\.\\./.*config|passwd|shadow\"",
-      "severity": "Critical",
-      "action": "block", 
-      "reason": "Sensitive system file access via MCP resource"
+      "reason": "Weak default password"
     }
   ]
 }

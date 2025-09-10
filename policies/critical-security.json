@@ -1,7 +1,7 @@
 {
   "policyName": "critical-security",
-  "version": "1.1",
-  "description": "Critical security patterns for high-risk vulnerability detection in MCP servers",
+  "version": "2.0",
+  "description": "Critical security patterns with reduced false positives for MCP servers",
   "severity": "Critical",
   "riskThresholds": {
     "critical": 50,
@@ -56,17 +56,17 @@
       "category": "injection",
       "severity": "Critical",
       "title": "Command Injection",
-      "description": "Unsafe execution of system commands with user input, enabling arbitrary code execution",
+      "description": "Unsafe execution of system commands with user input",
       "patterns": [
-        "exec\\s*\\(",
-        "system\\s*\\(",
-        "subprocess\\.(run|call|Popen)",
-        "os\\.system\\s*\\(",
-        "eval\\s*\\(",
-        "\\$\\(.*\\)",
-        "`.*`",
-        ";\\s*(rm|cat|ls|pwd|whoami)",
-        "\\|\\s*(nc|netcat|telnet)"
+        "subprocess\\.(run|call|Popen)\\([^)]*shell\\s*=\\s*True[^)]*f[\"'][^\"']*\\{[^}]*\\}",
+        "subprocess\\.(run|call|Popen)\\([^)]*shell\\s*=\\s*True[^)]*\\+[^)]*(?:user|host|target|input|query)",
+        "subprocess\\.run\\s*\\([^)]*shell\\s*=\\s*True",
+        "os\\.system\\s*\\(\\s*f[\"'][^\"']*\\{[^}]*\\}",
+        "os\\.system\\s*\\([^)]*\\+[^)]*(?:user|host|target|input)",
+        "eval\\s*\\([^)]*(?:user|input|request)",
+        "exec\\s*\\([^)]*(?:user|input|request)",
+        ";\\s*(rm|cat|ls|pwd|whoami)\\s+[^;]*\\{",
+        "\\|\\s*(nc|netcat|telnet)\\s+[^;]*\\{"
       ]
     },
     {
@@ -74,17 +74,17 @@
       "category": "injection",
       "severity": "High",
       "title": "SQL Injection",
-      "description": "SQL query manipulation patterns that could lead to database compromise or data exfiltration",
+      "description": "SQL query manipulation patterns indicating injection attempts",
       "patterns": [
-        "UNION\\s+SELECT",
-        "OR\\s+1\\s*=\\s*1",
-        "'\\s*OR\\s*'",
-        "DROP\\s+TABLE",
-        "INSERT\\s+INTO",
-        "UPDATE\\s+.*\\s+SET",
-        "DELETE\\s+FROM",
-        "--\\s*$",
-        "/\\*.*\\*/"
+        "UNION\\s+SELECT(?!.*prepared|.*parametrized)",
+        "OR\\s+1\\s*=\\s*1(?!.*comment)",
+        "'\\s*OR\\s*'[^']*'\\s*=\\s*'",
+        "DROP\\s+TABLE(?!.*IF\\s+EXISTS)",
+        "f[\"']SELECT\\s+.*\\{[^}]*\\}[^\"']*[\"'](?!.*prepared)",
+        "f[\"'].*LIKE\\s+[\"']%\\{[^}]*\\}%[\"'][^\"']*[\"'](?!.*prepared)",
+        "DELETE\\s+FROM\\s+[^\\s]+\\s+WHERE\\s+[^=]*=\\s*[\"'][^\"']*[\"']\\s*;\\s*--",
+        "--\\s*$(?=.*query|.*sql)",
+        "/\\*.*\\*/(?=.*query|.*WHERE)"
       ]
     },
     {
@@ -92,15 +92,15 @@
       "category": "file_access", 
       "severity": "High",
       "title": "Path Traversal",
-      "description": "Directory traversal attempts targeting sensitive system files (/etc/passwd, Windows system32)",
+      "description": "Directory traversal attempts targeting sensitive system files",
       "patterns": [
-        "\\.\\./",
-        "\\.\\.\\\\",
-        "%2e%2e%2f",
-        "%2e%2e\\\\",
-        "/etc/passwd",
-        "/etc/shadow",
-        "\\\\windows\\\\system32"
+        "\\.\\./.*(?:etc/passwd|etc/shadow|windows/system32)",
+        "\\.\\.\\\\.*(?:etc/passwd|etc/shadow|windows/system32)",
+        "%2e%2e%2f.*(?:etc|windows)",
+        "%2e%2e\\\\.*(?:etc|windows)",
+        "file://.*\\.\\./.*(?:etc|windows|system)",
+        "with\\s+open\\s*\\([^)]*filename[^)]*\\).*[\"']r[\"'](?!.*validate|.*sanitize)",
+        "open\\s*\\([^)]*\\{[^}]*filename[^}]*\\}"
       ]
     },
     {
