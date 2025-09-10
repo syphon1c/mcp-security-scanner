@@ -5,6 +5,7 @@
 test_reports/*
 reports/*
 test-reports/*
+test/testdata/samples/*
 
 # macOS system files
 .DS_Store
