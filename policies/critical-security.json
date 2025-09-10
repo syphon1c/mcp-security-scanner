@@ -52,6 +52,20 @@
       ]
     },
     {
+      "id": "MCP_PROMPT_INJECTION_001",
+      "category": "mcp_specific",
+      "severity": "Critical",
+      "title": "MCP Resource Prompt Injection Vulnerability",
+      "description": "Direct reflection of user input in MCP resource responses enabling prompt injection attacks",
+      "patterns": [
+        "return\\s+f[\"'].*\\{[^}]*(?:user_id|username|input|param|arg)[^}]*\\}[^\"']*[\"'](?!.*(?:sanitize|validate|escape|clean))",
+        "@mcp\\.resource\\([^)]*\\{[^}]*\\}[^)]*\\)[^{]*def[^{]*\\([^)]*[^)]*\\):[^{]*return[^{]*f[\"'][^\"']*\\{[^}]*\\}",
+        "def\\s+\\w+\\s*\\([^)]*(?:user_id|username)[^)]*\\):[^{]*return\\s+f[\"'][^\"']*\\{[^}]*\\}[^\"']*[\"'](?!.*(?:validate|sanitize))",
+        "return\\s+f[\"'](?:No\\s+|User\\s+|Error\\s+)?[^\"']*\\{[^}]*(?:user_id|username|input)[^}]*\\}",
+        "@mcp\\.(?:resource|tool)\\([^)]*\\)[^{]*def[^{]*\\([^)]*\\b(?:user_id|username|input)\\b[^)]*\\):[^{]*return[^{]*f[\"'][^\"']*\\{[^}]*\\b(?:user_id|username|input)\\b[^}]*\\}[^\"']*[\"'](?!.*(?:sanitize|validate|escape))"
+      ]
+    },
+    {
       "id": "INJECTION_001",
       "category": "injection",
       "severity": "Critical",
@@ -397,6 +411,36 @@
         "(?i)display.*content.*of.*resource.*at",
         "(?i)you.*will.*help.*me.*access.*sensitive",
         "(?i)now.*helpful.*assistant.*access.*information"
+      ]
+    },
+    {
+      "id": "MCP_MISSING_INPUT_VALIDATION_001",
+      "category": "input_validation",
+      "severity": "High",
+      "title": "MCP Function Missing Input Validation",
+      "description": "MCP resource or tool function that processes user input without validation",
+      "patterns": [
+        "@mcp\\.resource.*def.*\\([^)]*\\):[^{]*(?!.*(?:validate|check|sanitize|clean|escape))",
+        "@mcp\\.tool.*def.*\\([^)]*\\):[^{]*(?!.*(?:validate|check|sanitize|clean|escape))",
+        "def.*\\([^)]*str[^)]*\\):[^{]*return[^{]*(?!.*(?:validate|sanitize|clean))"
+      ]
+    },
+    {
+      "id": "MCP_INFORMATION_DISCLOSURE_001", 
+      "category": "information_disclosure",
+      "severity": "Critical",
+      "title": "MCP Resource Information Disclosure",
+      "description": "MCP resources that may expose sensitive internal information",
+      "patterns": [
+        "@mcp\\.resource.*internal://",
+        "@mcp\\.resource.*admin.*",
+        "@mcp\\.resource.*secret.*",
+        "@mcp\\.resource.*credential.*",
+        "@mcp\\.resource.*config.*",
+        "internal://.*credential",
+        "internal://.*admin",
+        "DO NOT SHARE",
+        "SYSTEM CREDENTIALS"
       ]
     },
     {
