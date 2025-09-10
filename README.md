@@ -43,6 +43,8 @@ Custom policies can be created using JSON configuration files.
 - **Alert Integration**: SIEM/SOAR integration for enterprise security stacks. Slack for direct monitoring alerts too.
 - **Reporting**: Multiple formats (JSON, HTML, PDF, Text) with half OK styling
 
+> **Note**: Static analysis has limitations and cannot detect all vulnerability types (e.g., semantic issues like prompt injection). Consider combining with runtime testing and dynamic analysis for comprehensive security coverage.
+
 ## Quick Start
 
 ### Installation
