@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Gareth Phillips/syphon1c
+// Licensed under the MIT License - see LICENSE file for details
+
 package analyzer
 
 import (

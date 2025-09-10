@@ -1,4 +1,6 @@
 # MCP Security Scanner Makefile
+# Copyright (c) 2025 Gareth Phillips/syphon1c
+# Licensed under the MIT License - see LICENSE file for details
 
 .PHONY: all build test test-unit test-integration test-benchmarks test-coverage test-verbose clean deps fmt lint run-scanner run-proxy help
 

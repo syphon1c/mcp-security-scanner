@@ -226,6 +226,10 @@ For detailed usage instructions, advanced configuration, and troubleshooting gui
 
 This project has utilised AI assistance for portions of code implementation and documentation to enhance development efficiency while maintaining code quality and security standards.
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ---
 
 **MCP Security Scanner** - Almost enterprise-grade security for Model Context Protocol infrastructure.
