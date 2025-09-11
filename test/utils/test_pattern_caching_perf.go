@@ -4,13 +4,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/syphon1c/mcp-security-scanner/internal/config"
 	"github.com/syphon1c/mcp-security-scanner/internal/integration"
 	"github.com/syphon1c/mcp-security-scanner/internal/scanner"
-	"github.com/syphon1c/mcp-security-scanner/pkg/types"
 )
 
 func main() {
@@ -36,6 +37,14 @@ func main() {
 		log.Fatalf("Failed to create scanner: %v", err)
 	}
 
+	// Create a temporary test directory with vulnerable content
+	testDir := "/tmp/mcp-caching-test-" + fmt.Sprintf("%d", time.Now().Unix())
+	err = os.MkdirAll(testDir, 0755)
+	if err != nil {
+		log.Fatalf("Failed to create test directory: %v", err)
+	}
+	defer os.RemoveAll(testDir) // Cleanup
+
 	// Test content with multiple polymorphic patterns
 	testContent := `
 import subprocess
@@ -55,53 +64,46 @@ document.write("<script>" + userInput + "</script>")
 innerHTML = "<div>" + untrustedData + "</div>"
 `
 
-	// Create test result structure
-	result := &types.ScanResult{
-		Target:      "test-file.py",
-		PolicyUsed:  "advanced-polymorphic-security",
-		Timestamp:   time.Now(),
-		Findings:    []types.Finding{},
-		Summary:     types.Summary{},
-		OverallRisk: "Low",
-		RiskScore:   0,
+	testFile := filepath.Join(testDir, "test.py")
+	err = os.WriteFile(testFile, []byte(testContent), 0644)
+	if err != nil {
+		log.Fatalf("Failed to create test file: %v", err)
 	}
+
+	// Determine which policy to use
+	policies := mcpScanner.GetPolicyEngine().ListPolicies()
+	var policyName string
+	if _, exists := policies["advanced-polymorphic-security"]; exists {
+		policyName = "advanced-polymorphic-security"
+	} else if _, exists := policies["critical-security"]; exists {
+		policyName = "critical-security"
+	} else {
+		log.Fatalf("No suitable policy found for testing")
+	}
+
+	fmt.Printf("📁 Using test directory: %s\n", testDir)
+	fmt.Printf("📋 Using policy: %s\n\n", policyName)
 
 	fmt.Println("📊 Running First Scan (Cold Cache)...")
 	start1 := time.Now()
 
 	// First scan - cold cache
-	err = mcpScanner.AnalyzeContentWithPolicy(testContent, "test.py", "advanced-polymorphic-security", result)
+	result1, err := mcpScanner.ScanLocalMCPServer(testDir, policyName)
 	if err != nil {
-		log.Printf("Warning: Failed to analyze content: %v", err)
-		// Try with a fallback policy
-		err = mcpScanner.AnalyzeContentWithPolicy(testContent, "test.py", "critical-security", result)
-		if err != nil {
-			log.Fatalf("Failed to analyze content with fallback policy: %v", err)
-		}
+		log.Fatalf("Failed to analyze content on first scan: %v", err)
 	}
 
 	duration1 := time.Since(start1)
-	finding1Count := len(result.Findings)
+	finding1Count := len(result1.Findings)
 
 	fmt.Printf("✅ First scan completed in: %v\n", duration1)
 	fmt.Printf("🔍 Findings detected: %d\n\n", finding1Count)
-
-	// Reset result for second scan
-	result2 := &types.ScanResult{
-		Target:      "test-file.py",
-		PolicyUsed:  result.PolicyUsed, // Use the same policy that worked
-		Timestamp:   time.Now(),
-		Findings:    []types.Finding{},
-		Summary:     types.Summary{},
-		OverallRisk: "Low",
-		RiskScore:   0,
-	}
 
 	fmt.Println("🚀 Running Second Scan (Warm Cache)...")
 	start2 := time.Now()
 
 	// Second scan - warm cache
-	err = mcpScanner.AnalyzeContentWithPolicy(testContent, "test.py", result.PolicyUsed, result2)
+	result2, err := mcpScanner.ScanLocalMCPServer(testDir, policyName)
 	if err != nil {
 		log.Fatalf("Failed to analyze content on second scan: %v", err)
 	}
