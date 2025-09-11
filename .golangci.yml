@@ -2,8 +2,6 @@
 run:
   timeout: 5m
   modules-download-mode: readonly
-  skip-dirs:
-    - scripts  # Skip scripts directory with standalone Go programs
 
 linters:
   enable:
@@ -74,6 +72,8 @@ linters-settings:
         disabled: true # Allow unexported in some cases
 
 issues:
+  exclude-dirs:
+    - scripts  # Skip scripts directory with standalone Go programs
   exclude-rules:
     # Exclude some linters from running on tests files
     - path: _test\.go
