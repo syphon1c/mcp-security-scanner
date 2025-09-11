@@ -2,6 +2,7 @@
 
 # Directories to ignore
 .github/
+!.github/workflows/
 test_reports/*
 reports/*
 test-reports/*
