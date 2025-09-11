@@ -2,6 +2,8 @@
 run:
   timeout: 5m
   modules-download-mode: readonly
+  skip-dirs:
+    - scripts  # Skip scripts directory with standalone Go programs
 
 linters:
   enable:
@@ -79,11 +81,15 @@ issues:
         - gosec
         - errcheck
     
-    # Exclude test utilities from linting (they have main functions)
-    - path: test/utils/
+    # Exclude scripts directory completely
+    - path: scripts/.*
       linters:
         - typecheck
         - unused
+        - errcheck
+        - gosec
+        - govet
+        - staticcheck
     
     # Exclude G204 (command execution) from our security scanner - it's intentional
     - path: internal/scanner/

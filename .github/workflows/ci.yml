@@ -41,13 +41,13 @@ jobs:
       run: go mod verify
       
     - name: Run tests
-      run: go test -v $(go list ./... | grep -v test/utils)
+      run: go test -v $(go list ./... | grep -v scripts)
       
     - name: Run tests with race detector
-      run: go test -race -v $(go list ./... | grep -v test/utils)
+      run: go test -race -v $(go list ./... | grep -v scripts)
       
     - name: Generate coverage report
-      run: go test -coverprofile=coverage.out $(go list ./... | grep -v test/utils)
+      run: go test -coverprofile=coverage.out $(go list ./... | grep -v scripts)
       
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -74,7 +74,7 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         version: latest
-        args: --timeout=5m
+        args: --timeout=5m --out-format=colored-line-number
 
   build:
     name: Build
