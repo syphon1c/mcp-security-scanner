@@ -2,10 +2,6 @@
 
 This directory contains standalone Go programs for testing and development purposes.
 
-# MCP Security Scanner - Utility Scripts
-
-This directory contains standalone Go programs for testing and development purposes.
-
 ## Available Scripts
 
 ### `basic-test/main.go`
@@ -31,6 +27,19 @@ Performance testing script that measures pattern compilation caching effectivene
 **Usage:**
 ```bash
 cd scripts/performance-test
+go run main.go
+```
+
+### `cache-test/main.go`
+Pattern compilation caching performance validation script:
+- Comprehensive pattern caching testing
+- Performance analysis across multiple scan iterations
+- Validates caching consistency and effectiveness
+- Advanced entropy and behavioral analysis testing
+
+**Usage:**
+```bash
+cd scripts/cache-test
 go run main.go
 ```
 
