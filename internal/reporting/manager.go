@@ -115,7 +115,7 @@ func (rm *ReportManager) generateJSONReport(result *types.ScanResult, outputPath
 	}
 
 	// Write to file
-	if err := os.WriteFile(outputPath, jsonData, 0644); err != nil {
+	if err := os.WriteFile(outputPath, jsonData, 0600); err != nil { // Fix G306: use 0600 permissions
 		return fmt.Errorf("failed to write JSON report: %w", err)
 	}
 
@@ -266,7 +266,7 @@ func (rm *ReportManager) generateTextReport(result *types.ScanResult, outputPath
 	content.WriteString(fmt.Sprintf("Generated on: %s\n", time.Now().Format("2006-01-02 15:04:05 MST")))
 
 	// Write to file
-	if err := os.WriteFile(outputPath, []byte(content.String()), 0644); err != nil {
+	if err := os.WriteFile(outputPath, []byte(content.String()), 0600); err != nil { // Fix G306: use 0600 permissions
 		return fmt.Errorf("failed to write text report: %w", err)
 	}
 

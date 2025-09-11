@@ -579,7 +579,10 @@ func (p *Proxy) handleAlerts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil { // Fix errcheck
+		log.Printf("Failed to encode alerts response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // handleLogs returns recent proxy logs
@@ -592,7 +595,10 @@ func (p *Proxy) handleLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil { // Fix errcheck
+		log.Printf("Failed to encode logs response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // handleHealth returns proxy health status
@@ -638,5 +644,8 @@ func (p *Proxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(health)
+	if err := json.NewEncoder(w).Encode(health); err != nil { // Fix errcheck
+		log.Printf("Failed to encode health response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }

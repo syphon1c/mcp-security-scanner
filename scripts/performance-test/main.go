@@ -39,7 +39,7 @@ func main() {
 
 	// Create a temporary test directory with vulnerable content
 	testDir := "/tmp/mcp-caching-test-" + fmt.Sprintf("%d", time.Now().Unix())
-	err = os.MkdirAll(testDir, 0755)
+	err = os.MkdirAll(testDir, 0o755) // Fix octalLiteral: use new octal literal style
 	if err != nil {
 		log.Fatalf("Failed to create test directory: %v", err)
 	}
@@ -65,7 +65,7 @@ innerHTML = "<div>" + untrustedData + "</div>"
 `
 
 	testFile := filepath.Join(testDir, "test.py")
-	err = os.WriteFile(testFile, []byte(testContent), 0644)
+	err = os.WriteFile(testFile, []byte(testContent), 0o644) // Fix octalLiteral: use new octal literal style
 	if err != nil {
 		log.Fatalf("Failed to create test file: %v", err)
 	}

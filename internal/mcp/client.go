@@ -41,6 +41,7 @@ func NewClient(timeout time.Duration, userAgent string) *Client {
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: false,
+					MinVersion:         tls.VersionTLS12, // Fix G402: TLS MinVersion too low
 				},
 			},
 		},

@@ -1375,7 +1375,7 @@ func (r *HTMLReporter) GenerateReport(result *types.ScanResult, outputPath strin
 	}
 
 	// Write to file
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0600); err != nil { // Fix G306: use 0600 permissions
 		return fmt.Errorf("failed to write HTML report: %w", err)
 	}
 

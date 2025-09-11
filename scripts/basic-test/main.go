@@ -39,7 +39,7 @@ func main() {
 
 	// Create a temporary test file with vulnerable content
 	testDir := "/tmp/mcp-test-" + fmt.Sprintf("%d", time.Now().Unix())
-	err = os.MkdirAll(testDir, 0755)
+	err = os.MkdirAll(testDir, 0o755) // Fix octalLiteral: use new octal literal style
 	if err != nil {
 		log.Fatalf("Failed to create test directory: %v", err)
 	}
@@ -60,7 +60,7 @@ def dangerous_function():
     return "done"
 `
 
-	err = os.WriteFile(testFile, []byte(testContent), 0644)
+	err = os.WriteFile(testFile, []byte(testContent), 0o644) // Fix octalLiteral: use new octal literal style
 	if err != nil {
 		log.Fatalf("Failed to create test file: %v", err)
 	}
