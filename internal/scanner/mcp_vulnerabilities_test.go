@@ -23,6 +23,7 @@ func TestNewMCPVulnerabilityTester(t *testing.T) {
 
 	if tester == nil {
 		t.Error("Expected tester to be created, got nil")
+		return // Exit early if tester is nil
 	}
 
 	if tester.scanner != scanner {

@@ -71,7 +71,11 @@ innerHTML = "<div>" + untrustedData + "</div>"
 	}
 
 	// Determine which policy to use
-	policies := mcpScanner.GetPolicyEngine().ListPolicies()
+	policyEngine := mcpScanner.GetPolicyEngine()
+	if policyEngine == nil {
+		log.Fatalf("Failed to get policy engine from scanner")
+	}
+	policies := policyEngine.ListPolicies()
 	var policyName string
 	if _, exists := policies["advanced-polymorphic-security"]; exists {
 		policyName = "advanced-polymorphic-security"

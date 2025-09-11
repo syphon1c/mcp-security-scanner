@@ -69,7 +69,11 @@ def dangerous_function():
 	fmt.Printf("📄 Created test file: %s\n\n", testFile)
 
 	// List available policies
-	policies := mcpScanner.GetPolicyEngine().ListPolicies()
+	policyEngine := mcpScanner.GetPolicyEngine()
+	if policyEngine == nil {
+		log.Fatalf("Failed to get policy engine from scanner")
+	}
+	policies := policyEngine.ListPolicies()
 	fmt.Printf("📋 Available policies (%d found):\n", len(policies))
 	for name, description := range policies {
 		fmt.Printf("  • %s: %s\n", name, description)
