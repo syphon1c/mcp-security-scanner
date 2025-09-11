@@ -1254,11 +1254,6 @@ func (apd *AdvancedPatternDetector) processWeightedVariants(content string, patt
 			break
 		}
 
-		weight := variant.Weight
-		if weight == 0 {
-			weight = 1.0 // Default weight
-		}
-
 		compiled, err := apd.getCompiledPattern(variant.Pattern)
 		if err != nil {
 			continue // Skip invalid patterns

@@ -70,11 +70,11 @@ func NewLogger(config Config) (*Logger, error) {
 	var output io.Writer = os.Stdout
 	if config.Output != "" && config.Output != "stdout" {
 		dir := filepath.Dir(config.Output)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return nil, fmt.Errorf("failed to create log directory: %w", err)
 		}
 
-		file, err := os.OpenFile(config.Output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		file, err := os.OpenFile(config.Output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open log file: %w", err)
 		}

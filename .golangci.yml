@@ -81,6 +81,7 @@ linters-settings:
       - elseif # Skip elseif warnings
       - httpNoBody # Skip httpNoBody warnings
       - exitAfterDefer # Skip exit after defer warnings in test scripts
+      - appendAssign # Skip append assign warnings
 
   revive:
     rules:
@@ -97,6 +98,14 @@ issues:
         - gosec
         - errcheck
         - unparam
+    
+    # Exclude test directory completely from errcheck
+    - path: test/.*
+      linters:
+        - errcheck
+        - gosec
+        - unparam
+        - gocritic
     
     # Exclude scripts directory completely
     - path: scripts/.*

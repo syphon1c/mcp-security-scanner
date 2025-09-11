@@ -95,7 +95,7 @@ func TestDetectAdvancedThreats_Integration(t *testing.T) {
 	}`
 
 	policyFile := filepath.Join(tempDir, "advanced-test-policy.json")
-	err := os.WriteFile(policyFile, []byte(policyContent), 0644)
+	err := os.WriteFile(policyFile, []byte(policyContent), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create test policy file: %v", err)
 	}

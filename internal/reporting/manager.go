@@ -62,7 +62,7 @@ func (rm *ReportManager) GenerateMultipleReports(result *types.ScanResult, baseD
 	timestamp := time.Now().Format("20060102_150405")
 
 	// Create output directory
-	if err := os.MkdirAll(baseDir, 0755); err != nil {
+	if err := os.MkdirAll(baseDir, 0o755); err != nil { // Fix octalLiteral
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -104,7 +104,7 @@ func (rm *ReportManager) GenerateMultipleReports(result *types.ScanResult, baseD
 func (rm *ReportManager) generateJSONReport(result *types.ScanResult, outputPath string) error {
 	// Create output directory if it doesn't exist
 	dir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -115,7 +115,7 @@ func (rm *ReportManager) generateJSONReport(result *types.ScanResult, outputPath
 	}
 
 	// Write to file
-	if err := os.WriteFile(outputPath, jsonData, 0600); err != nil { // Fix G306: use 0600 permissions
+	if err := os.WriteFile(outputPath, jsonData, 0o600); err != nil { // Fix G306: use 0o600 permissions
 		return fmt.Errorf("failed to write JSON report: %w", err)
 	}
 
@@ -177,7 +177,7 @@ func (rm *ReportManager) generatePDFReport(result *types.ScanResult, outputPath 
 func (rm *ReportManager) generateTextReport(result *types.ScanResult, outputPath string) error {
 	// Create output directory if it doesn't exist
 	dir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -266,7 +266,7 @@ func (rm *ReportManager) generateTextReport(result *types.ScanResult, outputPath
 	content.WriteString(fmt.Sprintf("Generated on: %s\n", time.Now().Format("2006-01-02 15:04:05 MST")))
 
 	// Write to file
-	if err := os.WriteFile(outputPath, []byte(content.String()), 0600); err != nil { // Fix G306: use 0600 permissions
+	if err := os.WriteFile(outputPath, []byte(content.String()), 0o600); err != nil { // Fix G306: use 0o600 permissions
 		return fmt.Errorf("failed to write text report: %w", err)
 	}
 

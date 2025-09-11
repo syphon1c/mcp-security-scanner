@@ -2,8 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
+	"os" // Use os.ReadFile instead of deprecated ioutil.ReadFile
 	"regexp"
 	"strings"
 	"time"
@@ -161,7 +160,7 @@ func LoadConfig(configPath string) (*AppConfig, error) {
 	}
 
 	// Read YAML file
-	data, err := ioutil.ReadFile(configPath)
+	data, err := os.ReadFile(configPath) // Use os.ReadFile instead of deprecated ioutil.ReadFile
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %w", configPath, err)
 	}

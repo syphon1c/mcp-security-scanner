@@ -1355,7 +1355,7 @@ func NewHTMLReporter() (*HTMLReporter, error) {
 func (r *HTMLReporter) GenerateReport(result *types.ScanResult, outputPath string) error {
 	// Create output directory if it doesn't exist
 	dir := filepath.Dir(outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -1375,7 +1375,7 @@ func (r *HTMLReporter) GenerateReport(result *types.ScanResult, outputPath strin
 	}
 
 	// Write to file
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0600); err != nil { // Fix G306: use 0600 permissions
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0o600); err != nil { // Fix G306: use 0o600 permissions
 		return fmt.Errorf("failed to write HTML report: %w", err)
 	}
 

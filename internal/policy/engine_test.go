@@ -142,7 +142,7 @@ func TestLoadPoliciesFromDirectory(t *testing.T) {
 			// Setup test files
 			for filename, content := range tt.setupFiles {
 				filePath := filepath.Join(tempDir, filename)
-				err := os.WriteFile(filePath, []byte(content), 0644)
+				err := os.WriteFile(filePath, []byte(content), 0o644)
 				if err != nil {
 					t.Fatalf("Failed to create test file %s: %v", filename, err)
 				}
@@ -420,7 +420,7 @@ func TestPolicyValidation(t *testing.T) {
 			tempDir := t.TempDir()
 			policyFile := filepath.Join(tempDir, "test-policy.json")
 
-			err := os.WriteFile(policyFile, []byte(tt.policyJSON), 0644)
+			err := os.WriteFile(policyFile, []byte(tt.policyJSON), 0o644)
 			if err != nil {
 				t.Fatalf("Failed to create test policy file: %v", err)
 			}
