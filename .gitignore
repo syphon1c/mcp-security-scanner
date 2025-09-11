@@ -1,12 +1,12 @@
 # MCP Security Scanner - Git Ignore File
 
 # Directories to ignore
-.github/
-!.github/workflows/
-test_reports/*
 reports/*
 test-reports/*
 test/testdata/samples/*
+!.github/workflows/*
+.github/copilot-instructions.md
+test_reports/*
 
 # macOS system files
 .DS_Store
