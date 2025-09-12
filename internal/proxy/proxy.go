@@ -72,7 +72,16 @@ func (p *Proxy) Start(port int) error {
 	go p.processAlerts()
 	go p.processLogs()
 
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), router)
+	// Create HTTP server with proper timeouts to prevent resource exhaustion
+	server := &http.Server{
+		Addr:         fmt.Sprintf(":%d", port),
+		Handler:      router,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	return server.ListenAndServe()
 }
 
 // handleHTTPProxy handles HTTP traffic proxying with security analysis
