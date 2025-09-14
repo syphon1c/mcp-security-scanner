@@ -1,6 +1,6 @@
 # MCP Security Scanner
 
-An extensive security scanner and proxy for Model Context Protocol (MCP) servers. Provides static analysis, dynamic vulnerability testing, and real-time monitoring to protect MCP deployments in enterprise environments.
+An extensive security scanner and proxy for Model Context Protocol (MCP) servers. Provides static analysis, dynamic vulnerability testing, and real-time monitoring to protect MCP deployments in your local dev or enterprise environments.
 
 ## Core Features
 
@@ -21,7 +21,7 @@ Tests live MCP servers for potential security vulnerabilities and malicious beha
 ### 🔄 Live Monitoring Proxy
 Real-time security monitoring and protection:
 - Transparent traffic interception between MCP clients and servers
-- Real-time threat detection and blocking
+- Real-time threat detection and blocking when the MCP Server goes bad
 - WebSocket and HTTP support
 - Security alerting with SIEM integration and Slack alerts
 
