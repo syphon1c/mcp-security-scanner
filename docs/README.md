@@ -58,7 +58,7 @@ This directory contains  documentation for the MCP Security Scanner project. The
 
 ### For System Administrators
 1. [Installation Guide](installation.md) - Deployment procedures
-2. [Proxy System](proxy-documentation.md) - Traffic analysis and monitoring (✅ WebSocket proxy fully tested)
+2. [Proxy System](proxy-documentation.md) - Traffic analysis and monitoring
 3. [Troubleshooting](troubleshooting.md) - Problem resolution
 
 ## Documentation Conventions
