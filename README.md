@@ -1,6 +1,24 @@
 # MCP Security Scanner
 
-An extensive security scanner and proxy for Model Context Protocol (MCP) servers. Provides static analysis, dynamic vulnerability testing, and real-time monitoring to protect MCP deployments in your local dev or enterprise environments.
+[![Beta Release](https://img.shields.io/badge/Release-v1.0.0--beta-orange?style=flat-square)](https://github.com/syphon1c/mcp-security-scanner/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat-square&logo=go)](https://golang.org)
+
+> **🚀 First Public Beta Release (v1.0.0-beta)** - Released as-is for feedback and testing. See [CHANGELOG.md](CHANGELOG.md) for complete release notes.
+
+A security scanner and proxy for Model Context Protocol (MCP) servers. Provides static analysis, dynamic vulnerability testing, and real-time monitoring to protect MCP deployments in your local dev or enterprise environments.
+
+## ⚠️ Beta Release Notice
+
+This is the **first public beta release (v1.0.0-beta)** of my personal MCP Security Scanner. While the software has been tested, please note:
+
+- **Use with caution** in your environments
+- **Test thoroughly** in your specific environment before deployment  
+- **Report bugs** and provide feedback via GitHub Issues (When I have time, I will get around to it)
+- **Review the [CHANGELOG.md](CHANGELOG.md)** for complete feature details and known limitations
+- **Community feedback** is welcomed to improve the software for the stable release
+
+---
 
 ## Core Features
 
@@ -218,13 +236,33 @@ mcp-security/
 ```
 
 
-## Support
+## Support & Contributing
 
+### 📚 Documentation
 For detailed usage instructions, advanced configuration, and troubleshooting guides, see the complete documentation in the `/docs` directory.
+
+### 🐛 Bug Reports & Feature Requests  
+This is a beta release - I welcome community feedback! Please use GitHub Issues to:
+- Report bugs and unexpected behaviour
+- Request new features or improvements  
+- Share usage experiences and suggestions
+- Contribute to documentation improvements (yes I use AI to help document the features and functionality)
+
+### 🤝 Contributing
+Contributions are welcome! Please see our contributing guidelines and submit pull requests for:
+- Bug fixes and improvements
+- New security detection rules
+- Additional security policies
+- Documentation enhancements
+- Note where you using AI for coding and always check the work to make sure its working like it should
+
+### 📞 Support
+- **GitHub Issues**: Primary support channel for bug reports and questions
+- **Documentation**: Usage/How to guides in the `/docs` directory
 
 ## Development Note
 
-This project has utilised AI assistance for portions of code implementation and documentation to enhance development efficiency while maintaining code quality and security standards.
+This project has utilised AI assistance for portions of code implementation and documentation to enhance development efficiency while maintaining code quality (Unit Tests) and security standards.
 
 ## License
 
@@ -232,4 +270,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**MCP Security Scanner** - Almost enterprise-grade security for Model Context Protocol infrastructure.
+**MCP Security Scanner v1.0.0-beta** - Advanced security testing for Model Context Protocol infrastructure.
+
+*Released as-is for testing, feedback and if anyone else finds it useful. See [CHANGELOG.md](CHANGELOG.md) for complete release details.*

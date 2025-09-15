@@ -21,7 +21,7 @@ import (
 	"github.com/syphon1c/mcp-security-scanner/pkg/types"
 )
 
-const Version = "v1.0.0"
+const Version = "v1.0.0-beta"
 
 func main() {
 	// Initialize logging system
