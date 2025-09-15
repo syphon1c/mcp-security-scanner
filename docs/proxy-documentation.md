@@ -71,7 +71,7 @@ go mod tidy
 go build -o mcpscan
 
 # Verify proxy functionality
-./mcpscan proxy --help
+./mcpscan proxy https://target-server.com 8080
 ```
 
 ### Security Policy Setup
@@ -91,7 +91,7 @@ Available Security Policies:
 ✅ org-custom-template (version 1.0) - Template for custom policies
 
 # Validate policy syntax
-./mcpscan validate-config configs/critical-security.json
+jq '.' policies/critical-security.json
 ```
 
 ## Configuration
@@ -758,7 +758,7 @@ curl -X POST http://localhost:9080/mcp/tools/call \
   -d '{"params": {"sql": "DROP TABLE users;"}}'
 
 # Check if pattern exists in policy
-grep -i "drop table" configs/critical-security.json
+grep -i "drop table" policies/critical-security.json
 
 # Verify alert threshold settings
 grep -A5 "alertThreshold" configs/config.yaml

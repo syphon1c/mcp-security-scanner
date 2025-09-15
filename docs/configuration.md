@@ -588,14 +588,12 @@ Configuration can also be overridden via command line flags:
 Validate your configuration file:
 
 ```bash
-# Validate configuration syntax and values
-./build/mcpscan validate-config configs/config.yaml
+# Validate configuration syntax manually
+# Check YAML syntax with any YAML parser
+python3 -c "import yaml; yaml.safe_load(open('configs/config.yaml'))" && echo "Valid YAML"
 
-# Check configuration with environment variables applied
-env MCPSCAN_SCANNER_TIMEOUT=60s ./build/mcpscan validate-config configs/config.yaml
-
-# Verbose validation with detailed output
-./build/mcpscan validate-config configs/config.yaml --verbose
+# Test configuration by running the scanner
+./build/mcpscan policies
 ```
 
 ## Security Considerations

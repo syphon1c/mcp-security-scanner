@@ -890,7 +890,7 @@ curl http://localhost:9080/monitor/alerts
 ./mcpscan policies
 
 # Solution 2: Verify pattern exists in policy
-grep -i "drop table" configs/critical-security.json
+grep -i "drop table" policies/critical-security.json
 
 # Solution 3: Check alert threshold
 grep alertThreshold configs/config.yaml

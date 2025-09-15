@@ -10,13 +10,13 @@ Before diving into specific issues, run these commands to check system health:
 
 ```bash
 # Verify installation
-./mcpscan --version
+./mcpscan version
 
 # Test basic functionality
 ./mcpscan scan-local . standard-security --output-dir ./test-reports
 
-# Check configuration
-./mcpscan config validate
+# Check policies are available
+./mcpscan policies
 
 # Test proxy connectivity
 ./mcpscan proxy --test-mode localhost 8080
@@ -493,7 +493,7 @@ When reporting issues, include:
 
 1. **Version Information**:
    ```bash
-   ./mcpscan --version
+   ./mcpscan version
    go version
    uname -a
    ```

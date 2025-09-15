@@ -4,7 +4,13 @@ This guide covers the complete installation process for MCP Security Scanner, fr
 
 ## Prerequisites
 
-### System Requirements
+### System ```bash
+# Check scanner version
+./build/mcpscan version
+
+# List available policies
+./build/mcpscan policies
+```ents
 - Go 1.21 or later
 - Git for source code management
 - Make for build automation
@@ -28,7 +34,7 @@ This guide covers the complete installation process for MCP Security Scanner, fr
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/mcp-security.git
+git clone https://github.com/syphon1c/mcp-security-scanner.git
 cd mcp-security
 
 # Install dependencies and build
@@ -36,21 +42,23 @@ make deps
 make build
 
 # Verify installation
-./build/mcpscan --version
+./build/mcpscan version
 ```
 
 ### Method 2: Pre-built Binaries
 
+This area is still a Work In Progress as I sort out the CI/CD Github Actions (:
+
 ```bash
 # Download latest release (replace with actual URL)
-wget https://github.com/your-org/mcp-security/releases/latest/mcpscan-linux-amd64.tar.gz
+wget https://github.com/syphon1c/mcp-security-scanner/releases/latest/mcpscan-linux-amd64.tar.gz
 
 # Extract and install
 tar -xzf mcpscan-linux-amd64.tar.gz
 sudo mv mcpscan /usr/local/bin/
 
 # Verify installation
-mcpscan --version
+mcpscan version
 ```
 
 ### Method 3: Docker Installation
@@ -125,10 +133,10 @@ Create organisation-specific policies:
 
 ```bash
 # Copy existing policy as template
-cp configs/standard-security.json configs/my-org-policy.json
+cp policies/standard-security.json policies/my-org-policy.json
 
 # Edit policy rules
-vi configs/my-org-policy.json
+vi policies/my-org-policy.json
 ```
 
 Policy structure:
@@ -259,11 +267,8 @@ sudo systemctl status mcpscan-proxy
 ### 1. Configuration Validation
 
 ```bash
-# Validate configuration syntax
-./build/mcpscan validate-config configs/config.yaml
-
 # Test policy loading
-./build/mcpscan policies --verbose
+./build/mcpscan policies
 ```
 
 ### 2. Network Connectivity
@@ -273,7 +278,10 @@ sudo systemctl status mcpscan-proxy
 ./build/mcpscan scan-remote https://httpbin.org/json standard-security
 
 # Test proxy functionality
-./build/mcpscan proxy https://httpbin.org 8080 --test-mode
+```bash
+# Test proxy functionality
+./build/mcpscan proxy https://httpbin.org 8080
+```
 ```
 
 ### 3. Performance Baseline

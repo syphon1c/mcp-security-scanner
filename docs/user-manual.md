@@ -9,9 +9,8 @@ This  guide covers all aspects of using the MCP Security Scanner, from basic ope
 After installation, verify the scanner is working:
 
 ```bash
-# Check version and help
-./build/mcpscan --version
-./build/mcpscan --help
+# Check version
+./build/mcpscan version
 
 # List available security policies
 ./build/mcpscan policies
@@ -27,8 +26,9 @@ The scanner provides several main commands:
 - `scan-local` - Scan local files and directories
 - `scan-remote` - Scan remote MCP servers
 - `proxy` - Run real-time proxy with security monitoring
-- `policies` - List and validate security policies
-- `validate-config` - Validate configuration files
+- `policies` - List available security policies
+- `integrations` - Test enterprise integrations
+- `version` - Show version information
 
 ## Local Scanning
 
@@ -586,7 +586,7 @@ curl -X POST http://localhost:9080/mcp/tools/call \
   -d '{"params": {"sql": "DROP TABLE users;"}}'
 
 # Check if pattern is in security policy
-grep -i "drop table" configs/critical-security.json
+grep -i "drop table" policies/critical-security.json
 ```
 
 #### Performance Issues
@@ -687,14 +687,11 @@ curl -v http://localhost:9080/monitor/health
 # Basic proxy setup
 ./build/mcpscan proxy https://target-server.com 8080
 
-# Proxy with custom bind address
-./build/mcpscan proxy https://target-server.com 8080 --bind 0.0.0.0:8080
+# Basic proxy usage
+./build/mcpscan proxy https://target-server.com 8080
 
-# Proxy with specific security policy
-./build/mcpscan proxy https://target-server.com 8080 --policy critical-security
-
-# Proxy with monitoring enabled
-./build/mcpscan proxy https://target-server.com 8080 --monitor
+# Proxy uses security policies from the configuration file
+# Edit configs/config.yaml to specify security policies
 ```
 
 ### Proxy Configuration
@@ -785,14 +782,11 @@ Example alert from proxy mode:
 # List all available policies
 ./build/mcpscan policies
 
-# Validate a specific policy
-./build/mcpscan validate-policy configs/critical-security.json
+# Check policy syntax manually with jq
+jq '.' policies/critical-security.json
 
-# Show policy details
-./build/mcpscan policies --details critical-security
-
-# Test policy against sample code
-./build/mcpscan test-policy configs/critical-security.json sample.go
+# Test policy by running a scan
+./build/mcpscan scan-local . critical-security
 ```
 
 ### Built-in Policies
@@ -1152,7 +1146,7 @@ jobs:
     
     - name: Install MCP Scanner
       run: |
-        wget https://github.com/your-org/mcp-security/releases/latest/mcpscan-linux-amd64.tar.gz
+        wget https://github.com/syphon1c/mcp-security-scanner/releases/latest/mcpscan-linux-amd64.tar.gz
         tar -xzf mcpscan-linux-amd64.tar.gz
         chmod +x mcpscan
     
@@ -1236,7 +1230,7 @@ ls -la configs/
 ./build/mcpscan policies
 
 # Validate policy files
-jq '.' configs/critical-security.json
+jq '.' policies/critical-security.json
 ```
 
 #### "Connection refused" (Remote scanning)
