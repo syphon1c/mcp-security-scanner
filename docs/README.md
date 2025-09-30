@@ -15,6 +15,7 @@ This directory contains  documentation for the MCP Security Scanner project. The
 - [**Scanner Engine**](scanner-engine.md) - Core vulnerability detection logic and algorithms
 - [**Proxy System**](proxy-documentation.md) - Real-time traffic analysis and interception
 - [**Proxy API Reference**](proxy-api.md) - REST API endpoints for monitoring and integration
+- [**Web Admin Interface**](web-admin-interface.md) - Browser-based administration and monitoring interface
 - [**Reporting System**](reporting-system.md) - Multi-format report generation and integration
 - [**Polymorphic Patterns**](polymorphic-patterns.md) - Advanced detection patterns and techniques
 - [**Pattern Configuration**](advanced-pattern-configuration.md) - Advanced weighted patterns, caching, and performance optimization (v1.2.0+)

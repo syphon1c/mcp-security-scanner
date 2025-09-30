@@ -140,6 +140,37 @@ curl http://localhost:8080/monitor/logs
 - **Security Dashboard**: RESTful monitoring endpoints
 - **Alert Integration**: Automatic forwarding to SIEM/SOAR systems
 
+## Web Admin Interface
+
+The proxy includes a built-in web administration interface for monitoring and managing security policies:
+
+```bash
+# Start proxy and access web interface
+./mcpscan proxy http://target-server.com 8080
+
+# Open web interface in browser
+open http://localhost:8080/admin
+```
+
+### Admin Interface Features
+
+- **Dashboard**: Real-time proxy health, traffic metrics, and security status
+- **Security Alerts**: Live monitoring of detected threats with severity filtering
+- **Policy Management**: View, edit, and manage security policies with modal forms
+- **Traffic Analysis**: Request/response monitoring and pattern analysis
+- **Health Monitoring**: Proxy performance metrics and system status
+
+### Web Interface Endpoints
+
+- `http://localhost:8080/admin` - Main administration dashboard
+- `http://localhost:8080/admin/alerts` - Security alerts monitoring page
+- `http://localhost:8080/admin/policies` - Policy management interface
+- `http://localhost:8080/admin/health` - System health dashboard
+
+![Security Alerts](/docs/media/mcp_web_alerts.png)
+
+The web interface provides a user-friendly way to monitor MCP security in real-time without requiring command-line tools or external monitoring systems.
+
 ## Configuration
 
 Basic configuration in `configs/config.yaml`:
