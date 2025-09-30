@@ -47,15 +47,19 @@ Alert Monitoring:   http://localhost:<port>/admin/alerts
 # Basic proxy mode (loads all policies from ./policies/ directory)
 ./mcpscan proxy http://target-server.com 9080
 
-# Example with mock server
+# Example with mock server running
 ./mcpscan proxy http://localhost:8010 8080
 ```
 
 The web interface will be accessible at `http://localhost:8080/admin`
 
-**Note**: The proxy automatically loads and applies ALL policy files (*.json) found in the `./policies/` directory. You cannot specify a single policy via command line - to use only specific policies, remove unwanted policy files from the policies directory before starting the proxy.
+![Web Admin Dashboard](/docs/media/mcp_web_admin.png)
+
+**Note**: The proxy automatically loads and applies ALL policy files (*.json) found in the `./policies/` directory. You cannot specify a single policy via command line to use only specific policies, remove unwanted policy files from the policies directory before starting the proxy.
 
 ### Managing Security Policies
+
+![Edit Policies](/docs/media/mcp_web_policies_edit.png)
 
 1. **View Policies**: Navigate to `/admin/policies` to see all loaded policies
 2. **View Policy Details**: Click "View Details" on any policy card to see rules and blocked patterns
@@ -71,6 +75,8 @@ The web interface will be accessible at `http://localhost:8080/admin`
 6. **Delete Blocked Pattern**: Click "Delete" next to any blocked pattern
 
 ### Monitoring Alerts
+
+![Security Alerts](/docs/media/mcp_web_alerts.png)
 
 1. **View All Alerts**: Navigate to `/admin/alerts`
 2. **Filter by Severity**: Use the filter buttons (All, Critical, High, Medium, Low)
@@ -160,7 +166,7 @@ Check file permissions on the `policies/` directory and ensure the policy JSON i
 Check browser developer console for detailed error messages. Most API errors are logged on both client and server side.
 
 ### Memory Usage
-Alert history is limited to 1000 entries to prevent memory issues. Consider implementing persistent storage for production use.
+Alert history is limited to 1000 entries to prevent memory issues. Consider implementing persistent storage for production use, this is for personal use currently.
 
 ## Development
 
