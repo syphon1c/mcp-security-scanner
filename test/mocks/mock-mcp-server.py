@@ -2,11 +2,13 @@
 """
 Mock MCP (Model Context Protocol) Server for Security Testing
 
-This server implements a basic MCP protocol server with intentional security
+This server implements a basic MCP protocol server with SIMULATED security
 vulnerabilities for testing the MCP Security Scanner's remote scanning capabilities.
 
-WARNING: This server contains intentional security vulnerabilities.
-DO NOT use in production or expose to untrusted networks.
+SAFETY: This server only simulates vulnerabilities and does NOT execute real commands,
+read actual files, or perform any dangerous operations. All responses are mocked.
+
+Safe for testing and development environments.
 """
 
 import json
@@ -321,7 +323,7 @@ class MockMCPServer:
             }, status=500)
 
     async def tool_execute_command(self, arguments):
-        """VULNERABLE: Direct command execution"""
+        """MOCK: Simulated command execution (SAFE - NO ACTUAL EXECUTION)"""
         command = arguments.get("command", "")
         
         if not self.vulnerable:
@@ -330,31 +332,40 @@ class MockMCPServer:
                 "isError": False
             }
         
-        try:
-            # INTENTIONALLY VULNERABLE: Direct command execution
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=5)
-            
-            output = f"Command: {command}\n"
-            output += f"Return code: {result.returncode}\n"
-            output += f"Output: {result.stdout}\n"
-            if result.stderr:
-                output += f"Error: {result.stderr}\n"
-            
-            return {
-                "content": [{"type": "text", "text": output}],
-                "isError": result.returncode != 0
-            }
-            
-        except subprocess.TimeoutExpired:
-            return {
-                "content": [{"type": "text", "text": "Command timed out"}],
-                "isError": True
-            }
-        except Exception as e:
-            return {
-                "content": [{"type": "text", "text": f"Execution error: {str(e)}"}],
-                "isError": True
-            }
+        # MOCK RESPONSES - NO ACTUAL COMMAND EXECUTION FOR SAFETY
+        logger.info(f"MOCK: Simulating command execution for: {command}")
+        
+        # Generate mock responses based on common commands
+        mock_responses = {
+            "ls": "file1.txt\nfile2.txt\ndirectory1/\n",
+            "pwd": "/home/user",
+            "whoami": "mockuser",
+            "id": "uid=1000(mockuser) gid=1000(mockuser) groups=1000(mockuser)",
+            "uname -a": "Linux mockhost 5.4.0 #1 SMP PREEMPT x86_64 GNU/Linux",
+            "cat /etc/passwd": "root:x:0:0:root:/root:/bin/bash\nmockuser:x:1000:1000::/home/mockuser:/bin/bash",
+            "ps aux": "USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\nroot 1 0.0 0.1 1234 567 ? Ss 00:00 0:01 /sbin/init",
+            "netstat -tulpn": "Active Internet connections\nProto Local Address State PID/Program\ntcp 0.0.0.0:80 LISTEN 1234/apache2"
+        }
+        
+        # Look for exact matches first
+        if command in mock_responses:
+            mock_output = mock_responses[command]
+        # Check for partial matches
+        elif any(cmd in command for cmd in mock_responses.keys()):
+            matching_cmd = next(cmd for cmd in mock_responses.keys() if cmd in command)
+            mock_output = mock_responses[matching_cmd]
+        # Generic response for unknown commands
+        else:
+            mock_output = f"MOCK: Command '{command}' executed successfully\nMOCK OUTPUT: [simulated response]"
+        
+        output = f"Command: {command}\n"
+        output += f"Return code: 0\n"
+        output += f"Output: {mock_output}\n"
+        
+        return {
+            "content": [{"type": "text", "text": output}],
+            "isError": False
+        }
 
     async def tool_query_database(self, arguments):
         """VULNERABLE: SQL Injection"""
@@ -406,7 +417,7 @@ class MockMCPServer:
             }
 
     async def tool_read_file(self, arguments):
-        """VULNERABLE: Path Traversal"""
+        """MOCK: Simulated file reading (SAFE - NO ACTUAL FILE ACCESS)"""
         file_path = arguments.get("file_path", "")
         
         if not self.vulnerable:
@@ -415,29 +426,51 @@ class MockMCPServer:
                 "isError": False
             }
         
-        try:
-            # INTENTIONALLY VULNERABLE: Path traversal
-            logger.warning(f"Reading potentially dangerous file: {file_path}")
-            
-            with open(file_path, 'r') as f:
-                content = f.read()
-            
-            output = f"File: {file_path}\n"
-            output += f"Content ({len(content)} chars):\n"
-            output += content[:1000]  # Limit output
-            if len(content) > 1000:
-                output += "\n... (truncated)"
-            
-            return {
-                "content": [{"type": "text", "text": output}],
-                "isError": False
-            }
-            
-        except Exception as e:
-            return {
-                "content": [{"type": "text", "text": f"File read error: {str(e)}"}],
-                "isError": True
-            }
+        # MOCK RESPONSES - NO ACTUAL FILE READING FOR SAFETY
+        logger.info(f"MOCK: Simulating file read for: {file_path}")
+        
+        # Generate mock file contents based on common paths
+        mock_files = {
+            "/etc/passwd": "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nmockuser:x:1000:1000::/home/mockuser:/bin/bash",
+            "/etc/shadow": "root:$6$mockhashedpassword:18500:0:99999:7:::\nmockuser:$6$anothermockhash:18500:0:99999:7:::",
+            "/etc/hosts": "127.0.0.1 localhost\n::1 localhost ip6-localhost ip6-loopback",
+            "/proc/version": "Linux version 5.4.0-74-generic (buildd@mockhost) (gcc version 9.4.0)",
+            "config.json": '{\n  "database": {\n    "host": "localhost",\n    "password": "secret123"\n  }\n}',
+            "secrets.txt": "API_KEY=sk-1234567890abcdef\nDATABASE_PASSWORD=supersecret\nADMIN_TOKEN=admin_token_here",
+            ".env": "DB_PASSWORD=secret123\nAPI_KEY=sk-abcdef\nSECRET_KEY=topsecret"
+        }
+        
+        # Check for exact matches
+        if file_path in mock_files:
+            mock_content = mock_files[file_path]
+        # Check for partial matches (e.g., any config.json, .env files)
+        elif any(pattern in file_path.lower() for pattern in ["config", "secret", ".env", "passwd", "shadow"]):
+            if "config" in file_path.lower():
+                mock_content = mock_files["config.json"]
+            elif "secret" in file_path.lower():
+                mock_content = mock_files["secrets.txt"]
+            elif ".env" in file_path.lower():
+                mock_content = mock_files[".env"]
+            elif "passwd" in file_path.lower():
+                mock_content = mock_files["/etc/passwd"]
+            elif "shadow" in file_path.lower():
+                mock_content = mock_files["/etc/shadow"]
+            else:
+                mock_content = "MOCK: File content simulation\nThis is mock file content for testing purposes."
+        # Generic response for unknown files
+        else:
+            mock_content = f"MOCK: Contents of {file_path}\nLine 1: Mock file content\nLine 2: This is simulated data\nLine 3: Not real file contents"
+        
+        output = f"File: {file_path}\n"
+        output += f"Content ({len(mock_content)} chars):\n"
+        output += mock_content[:1000]  # Limit output
+        if len(mock_content) > 1000:
+            output += "\n... (truncated)"
+        
+        return {
+            "content": [{"type": "text", "text": output}],
+            "isError": False
+        }
 
     async def tool_generate_report(self, arguments):
         """VULNERABLE: XSS in HTML generation"""
@@ -533,31 +566,16 @@ class MockMCPServer:
             
             # VULNERABLE: Allow reading dangerous resources
             if uri == "file:///etc/passwd":
-                if self.vulnerable:
-                    try:
-                        with open("/etc/passwd", "r") as f:
-                            content = f.read()
-                        result = {
-                            "contents": [
-                                {
-                                    "uri": uri,
-                                    "mimeType": "text/plain",
-                                    "text": content
-                                }
-                            ]
+                # MOCK RESPONSE - NO ACTUAL FILE ACCESS
+                result = {
+                    "contents": [
+                        {
+                            "uri": uri,
+                            "mimeType": "text/plain",
+                            "text": "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nmockuser:x:1000:1000::/home/mockuser:/bin/bash"
                         }
-                    except:
-                        result = {
-                            "contents": [
-                                {
-                                    "uri": uri,
-                                    "mimeType": "text/plain",
-                                    "text": "root:x:0:0:root:/root:/bin/bash\nfake:user:data:here"
-                                }
-                            ]
-                        }
-                else:
-                    result = {"error": "Access denied"}
+                    ]
+                }
                     
             elif uri == "config://database":
                 result = {
@@ -632,19 +650,27 @@ class MockMCPServer:
         })
 
     async def handle_debug_info(self, request):
-        """Debug info endpoint (VULNERABLE: Information disclosure)"""
+        """Debug info endpoint (MOCK: Information disclosure simulation)"""
         if not self.vulnerable:
             return web.json_response({"error": "Debug disabled in safe mode"}, status=403)
         
-        # VULNERABLE: Information disclosure
+        # MOCK DEBUG INFO - NO REAL ENVIRONMENT OR SYSTEM DATA
         debug_info = {
             "server_info": self.server_info,
             "tools_count": len(self.tools),
             "resources_count": len(self.resources),
-            "database_path": self.db_path,
-            "environment_vars": dict(os.environ),
-            "current_directory": os.getcwd(),
-            "process_id": os.getpid(),
+            "database_path": "/tmp/mock_mcp_test.db",
+            "environment_vars": {
+                "PATH": "/usr/local/bin:/usr/bin:/bin",
+                "HOME": "/home/mockuser",
+                "USER": "mockuser",
+                "SECRET_API_KEY": "sk-mock1234567890abcdef",
+                "DATABASE_PASSWORD": "mocksecret123",
+                "AWS_ACCESS_KEY_ID": "AKIAMOCKKEY123456789",
+                "AWS_SECRET_ACCESS_KEY": "mockSecretKey123456789abcdefghijklmnop"
+            },
+            "current_directory": "/opt/mock-mcp-server",
+            "process_id": 12345,
             "vulnerable_endpoints": [
                 "/mcp/tools/call -> execute_command (RCE)",
                 "/mcp/tools/call -> query_database (SQLi)",
@@ -652,7 +678,12 @@ class MockMCPServer:
                 "/mcp/tools/call -> generate_report (XSS)",
                 "/mcp/resources/read -> file:// (LFI)",
                 "/debug/info (Information Disclosure)"
-            ]
+            ],
+            "internal_config": {
+                "admin_password": "admin123",
+                "jwt_secret": "mock_jwt_secret_key_123",
+                "encryption_key": "mock_encryption_key_456"
+            }
         }
         
         return web.json_response(debug_info)
@@ -728,7 +759,7 @@ async def main():
         runner = await server.start_server()
         
         print(f"\n🚀 Mock MCP Server running on http://{args.host}:{args.port}")
-        print(f"Mode: {'VULNERABLE' if vulnerable else 'SAFE'}")
+        print(f"Mode: {'MOCK VULNERABLE' if vulnerable else 'SAFE'}")
         print("\nEndpoints:")
         print(f"  POST /mcp/initialize")
         print(f"  POST /mcp/tools/list")
@@ -737,7 +768,7 @@ async def main():
         print(f"  POST /mcp/resources/read")
         print(f"  GET  /health")
         if vulnerable:
-            print(f"  GET  /debug/info (VULNERABLE)")
+            print(f"  GET  /debug/info (MOCK VULNERABLE)")
         print(f"  WS   /ws")
         
         print(f"\nTesting:")
@@ -745,9 +776,9 @@ async def main():
         print(f"  ./mcpscan scan-remote http://{args.host}:{args.port} critical-security")
         
         if vulnerable:
-            print(f"\n⚠️  WARNING: Server running in VULNERABLE mode!")
-            print(f"   Contains intentional security vulnerabilities for testing.")
-            print(f"   DO NOT expose to untrusted networks!")
+            print(f"\n✅ SAFE: Server simulates vulnerabilities with mock responses only!")
+            print(f"   No real commands are executed or files accessed.")
+            print(f"   Safe for testing and development environments.")
         
         print(f"\nPress Ctrl+C to stop")
         
