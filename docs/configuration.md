@@ -580,7 +580,7 @@ Configuration can also be overridden via command line flags:
 ./build/mcpscan scan-local . mcp-advanced-security --verbose
 
 # Override proxy settings
-./build/mcpscan proxy https://target.com 8080 --bind 127.0.0.1:8080 --timeout 15s
+./build/mcpscan proxy https://target.com 8080
 ```
 
 ## Configuration Validation

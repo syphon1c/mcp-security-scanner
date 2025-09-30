@@ -405,7 +405,7 @@ Endpoints:
 
 ```bash
 # Start proxy monitoring the mock server
-./mcpscan proxy http://localhost:8000 9080 critical-security
+./mcpscan proxy http://localhost:8000 9080
 
 # Verify proxy is running
 curl http://localhost:9080/monitor/health
@@ -711,7 +711,7 @@ curl http://localhost:9080/monitor/alerts | jq .
 
 # Check detailed logs (Note: By default, proxy logs go to stdout/stderr)
 # To create proxy.log file, redirect output when starting proxy:
-# ./mcpscan proxy http://localhost:8000 9080 critical-security > proxy.log 2>&1 &
+# ./mcpscan proxy http://localhost:8000 9080 > proxy.log 2>&1 &
 
 # If proxy.log exists (from redirected output):
 tail -20 proxy.log | grep "SECURITY ALERT"
@@ -809,7 +809,7 @@ export SIEM_API_KEY=test-api-key
 
 # Restart proxy with SIEM integration
 pkill -f mcpscan
-./mcpscan proxy http://localhost:8000 9080 critical-security &
+./mcpscan proxy http://localhost:8000 9080 &
 
 # Generate security event
 curl -X POST http://localhost:9080/mcp/tools/call \
@@ -829,7 +829,7 @@ export SLACK_WEBHOOK=https://hooks.slack.com/services/test/webhook
 
 # Restart proxy with Slack integration
 pkill -f mcpscan
-./mcpscan proxy http://localhost:8000 9080 critical-security &
+./mcpscan proxy http://localhost:8000 9080 &
 
 # Generate high-severity alert
 curl -X POST http://localhost:9080/mcp/tools/call \
@@ -873,7 +873,7 @@ curl: (7) Failed to connect to localhost port 9080: Connection refused
 ps aux | grep mcpscan
 
 # Solution 2: Restart proxy
-./mcpscan proxy http://localhost:8000 9080 critical-security
+./mcpscan proxy http://localhost:8000 9080
 
 # Solution 3: Check port availability
 lsof -i :9080
@@ -930,13 +930,13 @@ export LOG_LEVEL=DEBUG
 export PROXY_DEBUG=true
 
 # Restart proxy with debug output (logs to stdout by default)
-./mcpscan proxy http://localhost:8000 9080 critical-security
+./mcpscan proxy http://localhost:8000 9080
 
 # To save logs to file, redirect output:
-./mcpscan proxy http://localhost:8000 9080 critical-security > proxy.log 2>&1 &
+./mcpscan proxy http://localhost:8000 9080 > proxy.log 2>&1 &
 
 # Or run in background and monitor logs:
-./mcpscan proxy http://localhost:8000 9080 critical-security &
+./mcpscan proxy http://localhost:8000 9080 &
 # Logs will appear in terminal. To capture: script -q proxy.log
 
 # Expected debug output:
@@ -960,7 +960,7 @@ rm -f proxy.log
 
 # Note: By default, proxy logs go to stdout/stderr
 # To create proxy.log file, redirect output when starting:
-./mcpscan proxy http://localhost:8000 9080 critical-security > proxy.log 2>&1 &
+./mcpscan proxy http://localhost:8000 9080 > proxy.log 2>&1 &
 
 # Verify clean state
 curl http://localhost:9080/monitor/health | jq '.alerts_queue_size, .logs_queue_size'

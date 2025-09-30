@@ -92,7 +92,7 @@ When a **Critical** severity alert is detected by the MCP Security Scanner:
 3. **Recovery**
    ```bash
    # Restart services with monitoring
-   ./mcpscan proxy http://localhost:8000 9081 critical-security
+   ./mcpscan proxy http://localhost:8000 9081
    
    # Verify functionality
    curl http://localhost:9081/monitor/health
@@ -301,7 +301,7 @@ forward_to_siem('https://siem.company.com/api/events', 'your-api-key')
    
    # Restart with monitoring
    systemctl start mcp-server
-   ./mcpscan proxy http://localhost:8000 9081 critical-security
+   ./mcpscan proxy http://localhost:8000 9081
    ```
 
 ### Data Recovery
@@ -408,7 +408,7 @@ Contact: [your contact info]
 2. **Proxy Security**
    ```bash
    # Run proxy with restricted user
-   sudo -u mcpscan-user ./mcpscan proxy http://localhost:8000 9081 critical-security
+   sudo -u mcpscan-user ./mcpscan proxy http://localhost:8000 9081
    
    # Verify monitoring endpoints are protected
    curl -I http://localhost:9081/monitor/health
