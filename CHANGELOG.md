@@ -5,6 +5,16 @@ All notable changes to the MCP Security Scanner project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1-beta] - 2025-09-30
+
+### ✨ Features Added
+- **Web Admin Interface**: Basic browser-based admin interface for proxy monitoring
+  - Real-time dashboard with proxy health and traffic metrics
+  - Security alerts monitoring with severity filtering
+  - Policy management with modal-based editing interface
+  - Health monitoring dashboard with system status
+  - Accessible at `http://localhost:8080/admin` when running in proxy mode
+
 ## [1.0.0-beta] - 2025-09-15
 
 ### 🎉 First Public Beta Release
