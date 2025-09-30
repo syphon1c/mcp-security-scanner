@@ -39,7 +39,7 @@ func TestNewProxy(t *testing.T) {
 	}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -94,7 +94,7 @@ func TestNewProxy_InvalidURL(t *testing.T) {
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
 	for _, invalidURL := range invalidURLs {
-		proxy, err := NewProxy(invalidURL, policies, alertProcessor)
+		proxy, err := NewProxy(invalidURL, policies, "./policies", alertProcessor)
 		if err == nil {
 			t.Errorf("Expected error for invalid URL: %s", invalidURL)
 		}
@@ -109,7 +109,7 @@ func TestNewProxy_NilPolicies(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, nil, alertProcessor)
+	proxy, err := NewProxy(targetURL, nil, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() should handle nil policies: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestNewProxy_NilAlertProcessor(t *testing.T) {
 	targetURL := "https://example.com"
 	policies := map[string]*types.SecurityPolicy{}
 
-	proxy, err := NewProxy(targetURL, policies, nil)
+	proxy, err := NewProxy(targetURL, policies, "./policies", nil)
 	if err != nil {
 		t.Fatalf("NewProxy() should handle nil alert processor: %v", err)
 	}
@@ -174,7 +174,7 @@ func TestProxy_ChannelCapacity(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -228,7 +228,7 @@ func TestProxy_WebSocketUpgrader(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -274,7 +274,7 @@ func TestProxy_Configuration(t *testing.T) {
 	}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -296,7 +296,7 @@ func TestProxy_EmptyPolicies(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() should handle empty policies: %v", err)
 	}
@@ -335,7 +335,7 @@ func TestProxy_AnalyzeRequest(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -434,7 +434,7 @@ func TestProxy_AnalyzeResponse(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -512,7 +512,7 @@ func TestProxy_AssessRisk(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -596,7 +596,7 @@ func TestProxy_HealthCheckEndpoint(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -722,7 +722,7 @@ func TestProxy_AlertsEndpoint(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}
@@ -768,7 +768,7 @@ func TestProxy_LogsEndpoint(t *testing.T) {
 	cfg := config.IntegrationSettings{}
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
-	proxy, err := NewProxy(targetURL, policies, alertProcessor)
+	proxy, err := NewProxy(targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("NewProxy() failed: %v", err)
 	}

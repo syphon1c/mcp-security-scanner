@@ -254,7 +254,7 @@ func handleProxy(config types.ScannerConfig, alertProcessor *integration.AlertPr
 	policies := mcpScanner.GetPolicyEngine().GetAllPolicies()
 
 	// Create and start proxy
-	mcpProxy, err := proxy.NewProxy(targetURL, policies, alertProcessor)
+	mcpProxy, err := proxy.NewProxy(targetURL, policies, config.PolicyDirectory, alertProcessor)
 	if err != nil {
 		log.Fatalf("Failed to create proxy: %v", err)
 	}
@@ -262,10 +262,15 @@ func handleProxy(config types.ScannerConfig, alertProcessor *integration.AlertPr
 	fmt.Printf("Starting MCP security proxy...\n")
 	fmt.Printf("Target: %s\n", targetURL)
 	fmt.Printf("Port: %d\n", port)
+	fmt.Printf("Admin Interface: http://localhost:%d/admin\n", port)
 	fmt.Printf("Monitoring endpoints:\n")
 	fmt.Printf("  - Health: http://localhost:%d/monitor/health\n", port)
 	fmt.Printf("  - Alerts: http://localhost:%d/monitor/alerts\n", port)
 	fmt.Printf("  - Logs: http://localhost:%d/monitor/logs\n", port)
+	fmt.Printf("Web Admin Interface:\n")
+	fmt.Printf("  - Dashboard: http://localhost:%d/admin\n", port)
+	fmt.Printf("  - Policies: http://localhost:%d/admin/policies\n", port)
+	fmt.Printf("  - Alerts: http://localhost:%d/admin/alerts\n", port)
 
 	log.Fatal(mcpProxy.Start(port))
 }

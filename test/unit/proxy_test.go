@@ -21,7 +21,7 @@ func TestProxyCreation(t *testing.T) {
 	alertProcessor := &integration.AlertProcessor{}
 
 	t.Run("ValidProxyCreation", func(t *testing.T) {
-		proxyInstance, err := proxy.NewProxy("http://localhost:8080", policies, alertProcessor)
+		proxyInstance, err := proxy.NewProxy("http://localhost:8080", policies, "./policies", alertProcessor)
 		if err != nil {
 			t.Fatalf("Failed to create proxy: %v", err)
 		}

@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/syphon1c/mcp-security-scanner/internal/analyzer"
 	"github.com/syphon1c/mcp-security-scanner/internal/integration"
+	"github.com/syphon1c/mcp-security-scanner/internal/web"
 	"github.com/syphon1c/mcp-security-scanner/pkg/types"
 )
 
@@ -24,23 +25,26 @@ import (
 type Proxy struct {
 	target          *url.URL
 	policies        map[string]*types.SecurityPolicy
+	policyDir       string
 	alertChan       chan types.SecurityAlert
 	logChan         chan types.ProxyLog
 	upgrader        websocket.Upgrader
 	alertProcessor  *integration.AlertProcessor
 	trafficAnalyzer *analyzer.AdvancedTrafficAnalyzer
+	adminServer     *web.AdminServer
 }
 
 // NewProxy creates a new MCP security proxy with integrated alert processing
-func NewProxy(targetURL string, policies map[string]*types.SecurityPolicy, alertProcessor *integration.AlertProcessor) (*Proxy, error) {
+func NewProxy(targetURL string, policies map[string]*types.SecurityPolicy, policyDir string, alertProcessor *integration.AlertProcessor) (*Proxy, error) {
 	target, err := url.Parse(targetURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid target URL: %v", err)
 	}
 
-	return &Proxy{
+	proxy := &Proxy{
 		target:          target,
 		policies:        policies,
+		policyDir:       policyDir,
 		alertChan:       make(chan types.SecurityAlert, 100),
 		logChan:         make(chan types.ProxyLog, 1000),
 		alertProcessor:  alertProcessor,
@@ -48,12 +52,20 @@ func NewProxy(targetURL string, policies map[string]*types.SecurityPolicy, alert
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
-	}, nil
+	}
+
+	// Create admin server
+	proxy.adminServer = web.NewAdminServer(policies, policyDir)
+
+	return proxy, nil
 }
 
 // Start starts the proxy server
 func (p *Proxy) Start(port int) error {
 	router := mux.NewRouter()
+
+	// Add admin routes first (must be before catch-all)
+	p.adminServer.AddRoutes(router)
 
 	// Monitoring endpoints (must be before the catch-all)
 	router.HandleFunc("/monitor/alerts", p.handleAlerts).Methods("GET")
@@ -64,7 +76,15 @@ func (p *Proxy) Start(port int) error {
 	router.HandleFunc("/ws", p.handleWebSocketProxy)
 
 	// HTTP/HTTPS proxy endpoints (catch-all, must be last)
-	router.PathPrefix("/").HandlerFunc(p.handleHTTPProxy)
+	// Exclude admin and monitoring paths from proxying
+	router.PathPrefix("/").HandlerFunc(p.handleHTTPProxy).MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
+		path := r.URL.Path
+		return !strings.HasPrefix(path, "/admin") &&
+			!strings.HasPrefix(path, "/api") &&
+			!strings.HasPrefix(path, "/monitor") &&
+			!strings.HasPrefix(path, "/static") &&
+			!strings.HasPrefix(path, "/ws")
+	})
 
 	log.Printf("Starting MCP proxy on port %d, forwarding to %s", port, p.target.String())
 
@@ -545,6 +565,11 @@ func (p *Proxy) assessRisk(request, response *types.MCPMessage) string {
 // processAlerts processes security alerts in the background with enterprise integrations
 func (p *Proxy) processAlerts() {
 	for alert := range p.alertChan {
+		// Record alert in admin server for web interface
+		if p.adminServer != nil {
+			p.adminServer.RecordAlert(alert)
+		}
+
 		// Log the alert locally
 		log.Printf("SECURITY ALERT [%s]: %s - %s (Source: %s)",
 			alert.Severity, alert.AlertType, alert.Description, alert.Source)

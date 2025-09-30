@@ -12,8 +12,8 @@ def main():
     print("🚀 MCP Live Monitoring Proxy - Final Verification")
     print("=" * 60)
     
-    proxy_url = "http://localhost:9080"
-    direct_url = "http://localhost:8000"
+    proxy_url = "http://localhost:8080"
+    direct_url = "http://localhost:8010"
     
     print("\n🔍 1. Testing Proxy Health and Monitoring")
     

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Policies - MCP Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #007cba 0%, #0056b3 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .nav {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav a {
+            color: #007cba;
+            text-decoration: none;
+            margin-right: 25px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav a:hover {
+            background-color: #e7f3ff;
+            color: #0056b3;
+        }
+        
+        .nav a.active {
+            background-color: #007cba;
+            color: white;
+        }
+        
+        .policy-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .policy-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+        }
+        
+        .policy-card.severity-Critical {
+            border-left-color: #dc3545;
+        }
+        
+        .policy-card.severity-High {
+            border-left-color: #fd7e14;
+        }
+        
+        .policy-card.severity-Medium {
+            border-left-color: #ffc107;
+        }
+        
+        .policy-card.severity-Low {
+            border-left-color: #28a745;
+        }
+        
+        .policy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .policy-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .policy-version {
+            background: #e7f3ff;
+            color: #007cba;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .policy-description {
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .policy-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .policy-stat {
+            color: #6c757d;
+        }
+        
+        .policy-stat strong {
+            color: #1d1d1f;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px 5px 5px 0;
+            background: #007cba;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .rules-container, .blocked-container {
+            margin-top: 20px;
+        }
+        
+        .rule-item, .blocked-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007cba;
+        }
+        
+        .rule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .rule-id {
+            font-weight: 600;
+            color: #007cba;
+        }
+        
+        .severity-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .severity-Critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .severity-High {
+            background: #ffeaa7;
+            color: #856404;
+        }
+        
+        .severity-Medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .severity-Low {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .pattern-list {
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            background: #007cba;
+            color: white;
+            border-color: #007cba;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Form Styles */
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #1d1d1f;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007cba;
+            box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .form-buttons .btn {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Security Policies</h1>
+        </div>
+        
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/policies" class="active">Security Policies</a>
+            <a href="/admin/alerts">Security Alerts</a>
+            <a href="/admin/health">Proxy Health</a>
+        </div>
+        
+        <div class="policy-grid" id="policiesContainer">
+            <!-- Policies will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Policy Details Modal -->
+    <div id="policyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePolicyModal()">&times;</span>
+            <h2 id="modalTitle">Policy Details</h2>
+            
+            <div class="tab-buttons">
+                <div class="tab-button active" onclick="showTab('rules')">Rules</div>
+                <div class="tab-button" onclick="showTab('blocked')">Blocked Patterns</div>
+            </div>
+            
+            <div id="rulesTab" class="tab-content active">
+                <h3>Security Rules</h3>
+                <button class="btn btn-success" onclick="showAddRuleModal()">Add New Rule</button>
+                <div id="rulesContainer"></div>
+            </div>
+            
+            <div id="blockedTab" class="tab-content">
+                <h3>Blocked Patterns</h3>
+                <button class="btn btn-success" onclick="showAddBlockedModal()">Add New Pattern</button>
+                <div id="blockedContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Rule Modal -->
+    <div id="ruleModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRuleModal()">&times;</span>
+            <h2 id="ruleModalTitle">Add New Rule</h2>
+            <form id="ruleForm" class="form">
+                <input type="hidden" id="ruleEditId" value="">
+                
+                <div class="form-group">
+                    <label for="ruleId">Rule ID:</label>
+                    <input type="text" id="ruleId" required placeholder="e.g., INJECTION_001">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ruleName">Rule Name:</label>
+                    <input type="text" id="ruleName" required placeholder="e.g., SQL Injection Detection">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ruleDescription">Description:</label>
+                    <textarea id="ruleDescription" required placeholder="Describe what this rule detects"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ruleCategory">Category:</label>
+                    <select id="ruleCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="injection">Injection</option>
+                        <option value="xss">Cross-Site Scripting</option>
+                        <option value="traversal">Path Traversal</option>
+                        <option value="command">Command Injection</option>
+                        <option value="crypto">Cryptographic</option>
+                        <option value="auth">Authentication</option>
+                        <option value="data">Data Exposure</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ruleSeverity">Severity:</label>
+                    <select id="ruleSeverity" required>
+                        <option value="">Select Severity</option>
+                        <option value="Critical">Critical</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rulePatterns">Patterns (one per line):</label>
+                    <textarea id="rulePatterns" required placeholder="Enter regex patterns, one per line"></textarea>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeRuleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Blocked Pattern Modal -->
+    <div id="blockedModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBlockedModal()">&times;</span>
+            <h2 id="blockedModalTitle">Add New Blocked Pattern</h2>
+            <form id="blockedForm" class="form">
+                <input type="hidden" id="blockedEditIndex" value="">
+                
+                <div class="form-group">
+                    <label for="blockedPattern">Pattern:</label>
+                    <input type="text" id="blockedPattern" required placeholder="e.g., .*malicious.*">
+                </div>
+                
+                <div class="form-group">
+                    <label for="blockedType">Type:</label>
+                    <select id="blockedType" required>
+                        <option value="">Select Type</option>
+                        <option value="regex">Regular Expression</option>
+                        <option value="exact">Exact Match</option>
+                        <option value="contains">Contains</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="blockedCategory">Category:</label>
+                    <select id="blockedCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="injection">Injection</option>
+                        <option value="xss">Cross-Site Scripting</option>
+                        <option value="traversal">Path Traversal</option>
+                        <option value="command">Command Injection</option>
+                        <option value="malware">Malware</option>
+                        <option value="phishing">Phishing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="blockedDescription">Description:</label>
+                    <textarea id="blockedDescription" required placeholder="Describe what this pattern blocks"></textarea>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeBlockedModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Pattern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentPolicy = null;
+        
+        // Load policies on page load
+        document.addEventListener('DOMContentLoaded', loadPolicies);
+        
+        async function loadPolicies() {
+            try {
+                const response = await fetch('/api/policies');
+                const policies = await response.json();
+                displayPolicies(policies);
+            } catch (error) {
+                console.error('Failed to load policies:', error);
+            }
+        }
+        
+        function displayPolicies(policies) {
+            const container = document.getElementById('policiesContainer');
+            container.innerHTML = '';
+            
+            policies.forEach(policy => {
+                const policyCard = document.createElement('div');
+                policyCard.className = `policy-card severity-${policy.severity}`;
+                policyCard.innerHTML = `
+                    <div class="policy-header">
+                        <div class="policy-title">${policy.name}</div>
+                        <div class="policy-version">v${policy.version}</div>
+                    </div>
+                    <div class="policy-description">${policy.description}</div>
+                    <div class="policy-stats">
+                        <div class="policy-stat"><strong>Severity:</strong> ${policy.severity}</div>
+                        <div class="policy-stat"><strong>Rules:</strong> ${policy.rulesCount}</div>
+                        <div class="policy-stat"><strong>Blocked Patterns:</strong> ${policy.blockedCount}</div>
+                        <div class="policy-stat"><strong>Polymorphic:</strong> ${policy.polymorphicCount}</div>
+                    </div>
+                    <button class="btn" onclick="viewPolicyDetails('${policy.name}')">View Details</button>
+                    <a href="/api/policies/${policy.name}/rules" class="btn btn-secondary" target="_blank">Rules API</a>
+                `;
+                container.appendChild(policyCard);
+            });
+        }
+        
+        async function viewPolicyDetails(policyName) {
+            currentPolicy = policyName;
+            document.getElementById('modalTitle').textContent = `Policy: ${policyName}`;
+            document.getElementById('policyModal').style.display = 'block';
+            
+            // Load rules and blocked patterns
+            await loadRules(policyName);
+            await loadBlockedPatterns(policyName);
+        }
+        
+        async function loadRules(policyName) {
+            try {
+                const response = await fetch(`/api/policies/${policyName}/rules`);
+                const rules = await response.json();
+                displayRules(rules);
+            } catch (error) {
+                console.error('Failed to load rules:', error);
+            }
+        }
+        
+        async function loadBlockedPatterns(policyName) {
+            try {
+                const response = await fetch(`/api/policies/${policyName}/blocked`);
+                const patterns = await response.json();
+                displayBlockedPatterns(patterns);
+            } catch (error) {
+                console.error('Failed to load blocked patterns:', error);
+            }
+        }
+        
+        function displayRules(rules) {
+            const container = document.getElementById('rulesContainer');
+            container.innerHTML = '';
+            
+            rules.forEach(rule => {
+                const ruleDiv = document.createElement('div');
+                ruleDiv.className = 'rule-item';
+                ruleDiv.innerHTML = `
+                    <div class="rule-header">
+                        <div class="rule-id">${rule.id}</div>
+                        <div class="severity-badge severity-${rule.severity}">${rule.severity}</div>
+                    </div>
+                    <h4>${rule.name || rule.id}</h4>
+                    <p><strong>Category:</strong> ${rule.category}</p>
+                    <p>${rule.description}</p>
+                    <div class="pattern-list">
+                        ${rule.patterns.map(pattern => `<div>${pattern}</div>`).join('')}
+                    </div>
+                    <button class="btn btn-secondary" onclick="editRule('${rule.id}')">Edit</button>
+                    <button class="btn" style="background: #dc3545;" onclick="deleteRule('${rule.id}')">Delete</button>
+                `;
+                container.appendChild(ruleDiv);
+            });
+        }
+        
+        function displayBlockedPatterns(patterns) {
+            const container = document.getElementById('blockedContainer');
+            container.innerHTML = '';
+            
+            patterns.forEach((pattern, index) => {
+                const patternDiv = document.createElement('div');
+                patternDiv.className = 'blocked-item';
+                patternDiv.innerHTML = `
+                    <h4>${pattern.category || 'Pattern'}</h4>
+                    <p><strong>Type:</strong> ${pattern.type}</p>
+                    <p>${pattern.description}</p>
+                    <div class="pattern-list">
+                        <div>${pattern.pattern}</div>
+                    </div>
+                    <button class="btn" style="background: #dc3545;" onclick="deleteBlockedPattern(${index})">Delete</button>
+                `;
+                container.appendChild(patternDiv);
+            });
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        async function deleteRule(ruleId) {
+            if (!confirm('Are you sure you want to delete this rule?')) return;
+            
+            try {
+                const response = await fetch(`/api/policies/${currentPolicy}/rules/${ruleId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    await loadRules(currentPolicy);
+                    await loadPolicies(); // Refresh policy counts
+                } else {
+                    alert('Failed to delete rule');
+                }
+            } catch (error) {
+                console.error('Failed to delete rule:', error);
+                alert('Failed to delete rule');
+            }
+        }
+        
+        async function deleteBlockedPattern(index) {
+            if (!confirm('Are you sure you want to delete this blocked pattern?')) return;
+            
+            try {
+                const response = await fetch(`/api/policies/${currentPolicy}/blocked/${index}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    await loadBlockedPatterns(currentPolicy);
+                    await loadPolicies(); // Refresh policy counts
+                } else {
+                    alert('Failed to delete blocked pattern');
+                }
+            } catch (error) {
+                console.error('Failed to delete blocked pattern:', error);
+                alert('Failed to delete blocked pattern');
+            }
+        }
+        
+        function showAddRuleModal() {
+            document.getElementById('ruleModalTitle').textContent = 'Add New Rule';
+            document.getElementById('ruleForm').reset();
+            document.getElementById('ruleEditId').value = '';
+            document.getElementById('ruleModal').style.display = 'block';
+        }
+        
+        function showAddBlockedModal() {
+            document.getElementById('blockedModalTitle').textContent = 'Add New Blocked Pattern';
+            document.getElementById('blockedForm').reset();
+            document.getElementById('blockedEditIndex').value = '';
+            document.getElementById('blockedModal').style.display = 'block';
+        }
+        
+        function editRule(ruleId) {
+            // Directly call API to get rule data - simpler and more reliable
+            loadRuleForEdit(ruleId);
+        }
+        
+        // Make editRule available globally
+        window.editRule = editRule;
+        
+        // Make other onclick functions globally available
+        window.deleteRule = deleteRule;
+        window.deleteBlockedPattern = deleteBlockedPattern;
+        
+        async function loadRuleForEdit(ruleId) {
+            console.log('Loading rule for edit:', ruleId, 'Policy:', currentPolicy);
+            try {
+                const response = await fetch(`/api/policies/${currentPolicy}/rules`);
+                const rules = await response.json();
+                console.log('Rules loaded:', rules);
+                const rule = rules.find(r => r.id === ruleId);
+                console.log('Found rule:', rule);
+                
+                if (rule) {
+                    document.getElementById('ruleModalTitle').textContent = 'Edit Rule';
+                    document.getElementById('ruleEditId').value = rule.id;
+                    document.getElementById('ruleId').value = rule.id;
+                    document.getElementById('ruleName').value = rule.name;
+                    document.getElementById('ruleDescription').value = rule.description;
+                    document.getElementById('ruleCategory').value = rule.category;
+                    document.getElementById('ruleSeverity').value = rule.severity;
+                    document.getElementById('rulePatterns').value = rule.patterns.join('\n');
+                    document.getElementById('ruleModal').style.display = 'block';
+                } else {
+                    console.error('Rule not found:', ruleId);
+                    alert('Rule not found: ' + ruleId);
+                }
+            } catch (error) {
+                console.error('Failed to load rule for editing:', error);
+                alert('Failed to load rule for editing: ' + error.message);
+            }
+        }
+        
+        async function addRule(rule) {
+            try {
+                const response = await fetch(`/api/policies/${currentPolicy}/rules`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rule)
+                });
+                
+                if (response.ok) {
+                    await loadRules(currentPolicy);
+                    await loadPolicies();
+                } else {
+                    alert('Failed to add rule');
+                }
+            } catch (error) {
+                console.error('Failed to add rule:', error);
+                alert('Failed to add rule');
+            }
+        }
+        
+        async function addBlockedPattern(pattern) {
+            try {
+                const response = await fetch(`/api/policies/${currentPolicy}/blocked`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pattern)
+                });
+                
+                if (response.ok) {
+                    await loadBlockedPatterns(currentPolicy);
+                    await loadPolicies();
+                } else {
+                    alert('Failed to add blocked pattern');
+                }
+            } catch (error) {
+                console.error('Failed to add blocked pattern:', error);
+                alert('Failed to add blocked pattern');
+            }
+        }
+        
+        // Modal management functions
+        function closePolicyModal() {
+            document.getElementById('policyModal').style.display = 'none';
+        }
+        
+        function closeRuleModal() {
+            document.getElementById('ruleModal').style.display = 'none';
+        }
+        
+        function closeBlockedModal() {
+            document.getElementById('blockedModal').style.display = 'none';
+        }
+        
+        // Form submission handlers
+        document.getElementById('ruleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ruleData = {
+                id: document.getElementById('ruleId').value,
+                name: document.getElementById('ruleName').value,
+                description: document.getElementById('ruleDescription').value,
+                category: document.getElementById('ruleCategory').value,
+                severity: document.getElementById('ruleSeverity').value,
+                patterns: document.getElementById('rulePatterns').value.split('\n').map(p => p.trim()).filter(p => p)
+            };
+            
+            const isEdit = document.getElementById('ruleEditId').value !== '';
+            
+            if (isEdit) {
+                await updateRule(ruleData);
+            } else {
+                await addRule(ruleData);
+            }
+            
+            closeRuleModal();
+        });
+        
+        document.getElementById('blockedForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const patternData = {
+                pattern: document.getElementById('blockedPattern').value,
+                type: document.getElementById('blockedType').value,
+                category: document.getElementById('blockedCategory').value,
+                description: document.getElementById('blockedDescription').value
+            };
+            
+            await addBlockedPattern(patternData);
+            closeBlockedModal();
+        });
+        
+        async function updateRule(rule) {
+            try {
+                const response = await fetch(`/api/policies/${currentPolicy}/rules/${rule.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rule)
+                });
+                
+                if (response.ok) {
+                    await loadRules(currentPolicy);
+                    await loadPolicies();
+                } else {
+                    alert('Failed to update rule');
+                }
+            } catch (error) {
+                console.error('Failed to update rule:', error);
+                alert('Failed to update rule');
+            }
+        }
+        
+        // Close modal when clicking X or outside
+        document.querySelector('.close').addEventListener('click', () => {
+            document.getElementById('policyModal').style.display = 'none';
+        });
+        
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('policyModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

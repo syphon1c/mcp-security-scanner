@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Alerts - MCP Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #007cba 0%, #0056b3 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .nav {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav a {
+            color: #007cba;
+            text-decoration: none;
+            margin-right: 25px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav a:hover {
+            background-color: #e7f3ff;
+            color: #0056b3;
+        }
+        
+        .nav a.active {
+            background-color: #007cba;
+            color: white;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .alert-summary {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .alert-count {
+            text-align: center;
+        }
+        
+        .alert-count .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007cba;
+        }
+        
+        .alert-count .label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+        
+        .btn-primary {
+            background: #007cba;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .alert-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+            transition: transform 0.2s ease;
+        }
+        
+        .alert-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .alert-item.severity-Critical {
+            border-left-color: #dc3545;
+            background: linear-gradient(to right, #f8d7da 0%, white 5%);
+        }
+        
+        .alert-item.severity-High {
+            border-left-color: #fd7e14;
+            background: linear-gradient(to right, #ffe4d6 0%, white 5%);
+        }
+        
+        .alert-item.severity-Medium {
+            border-left-color: #ffc107;
+            background: linear-gradient(to right, #fff3cd 0%, white 5%);
+        }
+        
+        .alert-item.severity-Low {
+            border-left-color: #28a745;
+            background: linear-gradient(to right, #d4edda 0%, white 5%);
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .alert-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .severity-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .severity-badge.Critical {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .severity-badge.High {
+            background: #fd7e14;
+            color: white;
+        }
+        
+        .severity-badge.Medium {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .severity-badge.Low {
+            background: #28a745;
+            color: white;
+        }
+        
+        .alert-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-meta-item {
+            color: #6c757d;
+        }
+        
+        .alert-meta-item strong {
+            color: #1d1d1f;
+        }
+        
+        .alert-evidence {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        
+        .no-alerts {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .no-alerts h3 {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .filter-controls {
+            margin-bottom: 20px;
+        }
+        
+        .filter-button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-button.active {
+            background: #007cba;
+            color: white;
+            border-color: #007cba;
+        }
+        
+        .auto-refresh {
+            color: #28a745;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Security Alerts</h1>
+        </div>
+        
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/policies">Security Policies</a>
+            <a href="/admin/alerts" class="active">Security Alerts</a>
+            <a href="/admin/health">Proxy Health</a>
+        </div>
+        
+        <div class="controls">
+            <div class="alert-summary" id="alertSummary">
+                <div class="alert-count">
+                    <div class="number" id="totalAlerts">0</div>
+                    <div class="label">Total Alerts</div>
+                </div>
+                <div class="alert-count">
+                    <div class="number" id="criticalAlerts">0</div>
+                    <div class="label">Critical</div>
+                </div>
+                <div class="alert-count">
+                    <div class="number" id="highAlerts">0</div>
+                    <div class="label">High</div>
+                </div>
+                <div class="alert-count">
+                    <div class="number" id="mediumAlerts">0</div>
+                    <div class="label">Medium</div>
+                </div>
+                <div class="alert-count">
+                    <div class="number" id="lowAlerts">0</div>
+                    <div class="label">Low</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="refreshAlerts()">Refresh</button>
+                <button class="btn btn-danger" onclick="clearAllAlerts()">Clear All</button>
+                <span class="auto-refresh" id="autoRefreshStatus">Auto-refresh: ON</span>
+            </div>
+        </div>
+        
+        <div class="filter-controls">
+            <button class="filter-button active" onclick="filterBySeverity('all')">All</button>
+            <button class="filter-button" onclick="filterBySeverity('Critical')">Critical</button>
+            <button class="filter-button" onclick="filterBySeverity('High')">High</button>
+            <button class="filter-button" onclick="filterBySeverity('Medium')">Medium</button>
+            <button class="filter-button" onclick="filterBySeverity('Low')">Low</button>
+        </div>
+        
+        <div id="alertsContainer">
+            <div class="loading">Loading alerts...</div>
+        </div>
+    </div>
+
+    <script>
+        let alerts = [];
+        let currentFilter = 'all';
+        let autoRefreshInterval;
+        
+        // Load alerts on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAlerts();
+            startAutoRefresh();
+        });
+        
+        async function loadAlerts() {
+            try {
+                const response = await fetch('/api/alerts');
+                alerts = await response.json();
+                updateAlertSummary();
+                displayAlerts();
+            } catch (error) {
+                console.error('Failed to load alerts:', error);
+                document.getElementById('alertsContainer').innerHTML = 
+                    '<div class="no-alerts"><h3>Failed to load alerts</h3><p>Please check your connection and try again.</p></div>';
+            }
+        }
+        
+        function updateAlertSummary() {
+            const summary = {
+                total: alerts.length,
+                critical: alerts.filter(a => a.severity === 'Critical').length,
+                high: alerts.filter(a => a.severity === 'High').length,
+                medium: alerts.filter(a => a.severity === 'Medium').length,
+                low: alerts.filter(a => a.severity === 'Low').length
+            };
+            
+            document.getElementById('totalAlerts').textContent = summary.total;
+            document.getElementById('criticalAlerts').textContent = summary.critical;
+            document.getElementById('highAlerts').textContent = summary.high;
+            document.getElementById('mediumAlerts').textContent = summary.medium;
+            document.getElementById('lowAlerts').textContent = summary.low;
+        }
+        
+        function displayAlerts() {
+            const container = document.getElementById('alertsContainer');
+            
+            let filteredAlerts = alerts;
+            if (currentFilter !== 'all') {
+                filteredAlerts = alerts.filter(alert => alert.severity === currentFilter);
+            }
+            
+            if (filteredAlerts.length === 0) {
+                container.innerHTML = '<div class="no-alerts"><h3>No alerts found</h3><p>No security alerts match the current filter.</p></div>';
+                return;
+            }
+            
+            container.innerHTML = filteredAlerts.map(alert => `
+                <div class="alert-item severity-${alert.severity}">
+                    <div class="alert-header">
+                        <div class="alert-title">${alert.alertType}</div>
+                        <div class="severity-badge ${alert.severity}">${alert.severity}</div>
+                    </div>
+                    <p style="margin-bottom: 15px; color: #6c757d;">${alert.description}</p>
+                    <div class="alert-meta">
+                        <div class="alert-meta-item"><strong>Source:</strong> ${alert.source}</div>
+                        <div class="alert-meta-item"><strong>Action:</strong> ${alert.action}</div>
+                        <div class="alert-meta-item"><strong>Time:</strong> ${formatTimestamp(alert.timestamp)}</div>
+                    </div>
+                    ${alert.evidence ? `<div class="alert-evidence">${alert.evidence}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+        
+        function filterBySeverity(severity) {
+            currentFilter = severity;
+            
+            // Update button states
+            document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            displayAlerts();
+        }
+        
+        async function refreshAlerts() {
+            await loadAlerts();
+        }
+        
+        async function clearAllAlerts() {
+            if (!confirm('Are you sure you want to clear all alerts? This action cannot be undone.')) return;
+            
+            try {
+                const response = await fetch('/api/alerts/clear', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alerts = [];
+                    updateAlertSummary();
+                    displayAlerts();
+                } else {
+                    alert('Failed to clear alerts');
+                }
+            } catch (error) {
+                console.error('Failed to clear alerts:', error);
+                alert('Failed to clear alerts');
+            }
+        }
+        
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                loadAlerts();
+            }, 30000); // Refresh every 30 seconds
+            
+            document.getElementById('autoRefreshStatus').textContent = 'Auto-refresh: ON';
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                document.getElementById('autoRefreshStatus').textContent = 'Auto-refresh: OFF';
+            }
+        }
+        
+        // Stop auto-refresh when page is hidden (battery/performance optimization)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+            }
+        });
+    </script>
+</body>
+</html>
