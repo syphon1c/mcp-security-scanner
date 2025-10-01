@@ -690,7 +690,10 @@ func (a *AdminServer) handleAddBlockedPattern(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Blocked pattern added"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Blocked pattern added"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleDeleteBlockedPattern(w http.ResponseWriter, r *http.Request) {
@@ -725,7 +728,10 @@ func (a *AdminServer) handleDeleteBlockedPattern(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Blocked pattern deleted"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Blocked pattern deleted"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleGetAlerts(w http.ResponseWriter, r *http.Request) {
@@ -737,14 +743,20 @@ func (a *AdminServer) handleGetAlerts(w http.ResponseWriter, r *http.Request) {
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
+	if err := json.NewEncoder(w).Encode(alerts); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleClearAlerts(w http.ResponseWriter, r *http.Request) {
 	a.alertHistory = make([]types.SecurityAlert, 0)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Alerts cleared"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Alerts cleared"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // savePolicyToFile saves a policy back to its JSON file
