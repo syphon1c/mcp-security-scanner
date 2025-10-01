@@ -51,7 +51,7 @@ func TestWebSocketProxyIntegration(t *testing.T) {
 	alertProcessor := &integration.AlertProcessor{}
 
 	// Create proxy instance
-	proxyInstance, err := proxy.NewProxy("http://"+targetURL, policies, alertProcessor)
+	proxyInstance, err := proxy.NewProxy("http://"+targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("Failed to create proxy: %v", err)
 	}
@@ -569,7 +569,7 @@ func TestWebSocketProxyPerformance(t *testing.T) {
 	policies := make(map[string]*types.SecurityPolicy)
 	alertProcessor := &integration.AlertProcessor{}
 
-	proxyInstance, err := proxy.NewProxy("http://"+targetURL, policies, alertProcessor)
+	proxyInstance, err := proxy.NewProxy("http://"+targetURL, policies, "./policies", alertProcessor)
 	if err != nil {
 		t.Fatalf("Failed to create proxy: %v", err)
 	}
