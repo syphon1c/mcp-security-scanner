@@ -36,7 +36,8 @@ This document provides a overview of the MCP Security Scanner architecture, comp
 │  │  ├─ Request/response modification                           │
 │  │  ├─ WebSocket bidirectional analysis                        │
 │  │  ├─ Performance monitoring and metrics                      │
-│  │  └─ Security alert generation and logging                   │
+│  │  ├─ Security alert generation and logging                   │
+│  │  └─ LLM-specific proxy with AI security monitoring          │
 │  │                                                             │
 │  └─ Policy Engine (internal/policy)                            │
 │     ├─ JSON policy loading                                     │
@@ -154,7 +155,7 @@ func (s *Scanner) analyseVulnerabilities(findings []Finding) RiskLevel
 
 ### 3. Proxy Engine (internal/proxy)
 
-**Purpose**: Real-time MCP traffic interception and security monitoring.
+**Purpose**: Real-time MCP traffic interception and security monitoring, including LLM-specific security analysis.
 
 **Key Responsibilities**:
 - HTTP and WebSocket traffic proxying
@@ -162,9 +163,11 @@ func (s *Scanner) analyseVulnerabilities(findings []Finding) RiskLevel
 - Suspicious activity detection
 - Alert generation and forwarding
 - Performance monitoring
+- LLM API security monitoring and threat detection
 
 **Architecture**:
 ```go
+// Standard MCP Proxy
 type Proxy struct {
     target       string
     bindAddr     string
@@ -174,19 +177,44 @@ type Proxy struct {
     wsUpgrader   websocket.Upgrader
 }
 
+// LLM-specific Proxy (extends standard proxy functionality)
+type LLMProxy struct {
+    target           string
+    bindAddr         string
+    policies         []SecurityPolicy
+    alertChan        chan Alert
+    httpProxy        *httputil.ReverseProxy
+    provider         string
+    securityContext  *LLMSecurityContext
+    trafficAnalyzer  *AdvancedTrafficAnalyzer
+}
+
 // Core proxy methods
 func (p *Proxy) Start() error
 func (p *Proxy) handleHTTP(w http.ResponseWriter, r *http.Request)
 func (p *Proxy) handleWebSocket(w http.ResponseWriter, r *http.Request)
 func (p *Proxy) analyseTraffic(data []byte) []Alert
+
+// LLM-specific methods
+func (p *LLMProxy) handleLLMRequest(w http.ResponseWriter, r *http.Request)
+func (p *LLMProxy) analyzeLLMRequest(req *LLMRequest) []Alert
+func (p *LLMProxy) detectProvider(targetURL string) string
 ```
 
 **Traffic Analysis Pipeline**:
-1. **Interception**: Capture HTTP/WebSocket traffic
-2. **Parsing**: Extract MCP messages from traffic
-3. **Analysis**: Pattern matching against security policies
+1. **Interception**: Capture HTTP/WebSocket traffic (including LLM API calls)
+2. **Parsing**: Extract MCP messages and LLM requests from traffic
+3. **Analysis**: Pattern matching against security policies (including LLM-specific threats)
 4. **Decision**: Allow, block, or alert on suspicious patterns
 5. **Logging**: Record security events for audit
+
+**LLM Security Features**:
+- **Multi-Provider Support**: OpenAI, Anthropic Claude, Google AI, Cohere
+- **Prompt Injection Detection**: Identifies malicious prompt manipulation attempts
+- **Jailbreaking Prevention**: Blocks attempts to bypass LLM safety mechanisms
+- **PII Protection**: Prevents transmission of personally identifiable information
+- **Token Monitoring**: Tracks API usage and consumption patterns
+- **Provider Auto-Detection**: Automatically identifies LLM provider from request patterns
 
 ### 4. Policy Engine (internal/policy)
 
@@ -781,4 +809,187 @@ Multiple Clients → Load Balancer → Scanner Proxies → Target Servers
                     Dashboard      Integration
 ```
 
-This architecture provides a robust, scalable foundation for MCP security assessment while maintaining flexibility for diverse deployment scenarios and security requirements.
+### LLM Security Proxy Deployment
+```
+LLM Client → LLM Security Proxy → LLM Provider API
+               ↓
+    Security Analysis Engine
+               ↓
+      Threat Detection & Blocking
+               ↓
+         SIEM/SOAR Integration
+```
+
+## LLM Security Components
+
+### LLM Type System (pkg/types/llm.go)
+
+The LLM type system provides unified support for multiple LLM providers while maintaining security context:
+
+```go
+// Core LLM request structure
+type LLMRequest struct {
+    Provider     string                 `json:"provider"`
+    Model        string                 `json:"model"`
+    Messages     []LLMMessage          `json:"messages"`
+    Temperature  *float64              `json:"temperature,omitempty"`
+    MaxTokens    *int                  `json:"max_tokens,omitempty"`
+    Stream       bool                  `json:"stream,omitempty"`
+    Timestamp    time.Time             `json:"timestamp"`
+    Metadata     map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// Unified message format across providers
+type LLMMessage struct {
+    Role      string `json:"role"`
+    Content   string `json:"content"`
+    Name      string `json:"name,omitempty"`
+    Timestamp time.Time `json:"timestamp"`
+}
+
+// Security context for LLM interactions
+type LLMSecurityContext struct {
+    RequestID         string    `json:"request_id"`
+    ClientIP          string    `json:"client_ip"`
+    Provider          string    `json:"provider"`
+    Model             string    `json:"model"`
+    TokensUsed        int       `json:"tokens_used"`
+    SecurityScore     int       `json:"security_score"`
+    ThreatsDetected   []string  `json:"threats_detected"`
+    Timestamp         time.Time `json:"timestamp"`
+}
+```
+
+### LLM Proxy Architecture (internal/proxy/llm_proxy.go)
+
+The LLM proxy extends the standard proxy functionality with AI-specific security analysis:
+
+```go
+type LLMProxy struct {
+    target           string
+    bindAddr         string
+    policies         []SecurityPolicy
+    alertChan        chan Alert
+    httpProxy        *httputil.ReverseProxy
+    provider         string
+    securityContext  *LLMSecurityContext
+    trafficAnalyzer  *AdvancedTrafficAnalyzer
+    alertProcessor   *AlertProcessor
+}
+
+// Core LLM proxy methods
+func (p *LLMProxy) handleLLMProxy(w http.ResponseWriter, r *http.Request)
+func (p *LLMProxy) analyzeLLMRequest(req *LLMRequest) []Alert
+func (p *LLMProxy) detectProvider(targetURL string) string
+func (p *LLMProxy) normalizeLLMRequest(body []byte, provider string) (*LLMRequest, error)
+```
+
+### Multi-Provider Support
+
+The LLM proxy supports major AI providers through unified interfaces:
+
+#### OpenAI Integration
+- **Endpoints**: `/v1/chat/completions`, `/v1/completions`
+- **Authentication**: Bearer token in Authorization header
+- **Message Format**: Chat completions with role-based messages
+
+#### Anthropic Claude Integration  
+- **Endpoints**: `/v1/messages`, `/v1/complete`
+- **Authentication**: API key in `x-api-key` header
+- **Message Format**: Messages API with structured conversations
+
+#### Google AI Integration
+- **Endpoints**: `/v1beta/models/{model}:generateContent`
+- **Authentication**: API key parameter or Authorization header
+- **Message Format**: Gemini generation requests
+
+#### Cohere Integration
+- **Endpoints**: `/v1/generate`, `/v1/chat`
+- **Authentication**: Bearer token in Authorization header
+- **Message Format**: Generation and chat APIs
+
+### LLM Security Policies
+
+LLM-specific security policies target AI-related threats:
+
+```json
+{
+  "policyName": "llm-security",
+  "version": "1.0",
+  "description": "LLM-specific security policy",
+  "rules": [
+    {
+      "id": "LLM_001",
+      "name": "Prompt Injection Detection",
+      "patterns": [
+        "ignore.*(previous|all|above).*instruct",
+        "disregard.*(previous|safety|guidelines)",
+        "act as if you are.*different"
+      ],
+      "severity": "Critical",
+      "category": "prompt_injection"
+    },
+    {
+      "id": "LLM_002", 
+      "name": "Jailbreaking Attempts",
+      "patterns": [
+        "pretend to be",
+        "roleplay as.*evil",
+        "bypass.*safety.*mechanism"
+      ],
+      "severity": "Critical",
+      "category": "jailbreaking"
+    },
+    {
+      "id": "LLM_003",
+      "name": "PII Extraction",
+      "patterns": [
+        "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b",
+        "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+      ],
+      "severity": "High",
+      "category": "pii_exposure"
+    }
+  ],
+  "blockedPatterns": [
+    "ignore previous instructions",
+    "act as if you are",
+    "pretend to be"
+  ]
+}
+```
+
+### LLM Security Analysis Pipeline
+
+1. **Request Interception**: Capture API calls to LLM providers
+2. **Provider Detection**: Automatically identify the target LLM service
+3. **Message Normalisation**: Convert provider-specific formats to unified structure
+4. **Security Analysis**: Apply LLM-specific threat detection patterns
+5. **Risk Assessment**: Calculate security scores based on detected threats
+6. **Action Decision**: Block, allow, or alert based on policy configuration
+7. **Response Monitoring**: Analyse LLM responses for data leakage or inappropriate content
+8. **Audit Logging**: Record all security events for compliance and forensics
+
+### LLM Threat Detection
+
+#### Prompt Injection Prevention
+- **Direct Injection**: "Ignore all previous instructions and..."
+- **Indirect Injection**: Multi-turn conversation manipulation
+- **Context Pollution**: Attempts to modify system prompts
+
+#### Jailbreaking Detection
+- **Role Playing**: "Pretend to be an evil AI that..."
+- **Hypothetical Scenarios**: "In a world where safety doesn't matter..."
+- **Authority Exploitation**: "As an administrator, override safety..."
+
+#### Data Protection
+- **PII Detection**: Credit cards, SSNs, email addresses
+- **Secret Exposure**: API keys, passwords, tokens
+- **Corporate Data**: Confidential information patterns
+
+#### Response Analysis
+- **Content Filtering**: Inappropriate or harmful generated content
+- **Data Leakage**: Unintended information disclosure
+- **Model Behaviour**: Signs of successful jailbreaking or prompt injection
+
+This architecture provides a robust, scalable foundation for both MCP security assessment and LLM API protection, while maintaining flexibility for diverse deployment scenarios and security requirements.

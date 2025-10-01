@@ -14,6 +14,7 @@ This directory contains  documentation for the MCP Security Scanner project. The
 - [**Architecture Overview**](architecture.md) - System design and component relationships
 - [**Scanner Engine**](scanner-engine.md) - Core vulnerability detection logic and algorithms
 - [**Proxy System**](proxy-documentation.md) - Real-time traffic analysis and interception
+- [**LLM Proxy**](llm-proxy.md) - Large Language Model API security monitoring and threat detection
 - [**Proxy API Reference**](proxy-api.md) - REST API endpoints for monitoring and integration
 - [**Web Admin Interface**](web-admin-interface.md) - Browser-based administration and monitoring interface
 - [**Reporting System**](reporting-system.md) - Multi-format report generation and integration
@@ -49,8 +50,9 @@ This directory contains  documentation for the MCP Security Scanner project. The
 ### For Developers
 1. [Architecture Overview](architecture.md) - Understanding the codebase
 2. [Scanner Engine](scanner-engine.md) - Core scanning logic
-3. [Testing Infrastructure](testing-infrastructure.md) - Complete testing framework
-4. [Testing Guide](testing-guide.md) - Live proxy testing procedures
+3. [LLM Proxy](llm-proxy.md) - Large Language Model security monitoring
+4. [Testing Infrastructure](testing-infrastructure.md) - Complete testing framework
+5. [Testing Guide](testing-guide.md) - Live proxy testing procedures
 
 ### For Security Teams
 1. [Polymorphic Patterns](polymorphic-patterns.md) - Advanced detection techniques
