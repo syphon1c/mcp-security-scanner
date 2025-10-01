@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .status-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .status-info .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            margin-left: 0.8rem;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--info-color));
+            color: white;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: rgba(52, 73, 94, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .metric-value.large {
+            font-size: 2rem;
+        }
+        
+        .progress-container {
+            margin: 1rem 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        
+        .progress-bar {
+            background: var(--background-color);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--info-color));
+            border-radius: 6px;
+            transition: width 0.8s ease;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin: 0.8rem 0;
+            border-radius: 8px;
+            border-left: 5px solid;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .alert:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .alert-Critical {
+            border-color: var(--danger-color);
+            background: rgba(231, 76, 60, 0.1);
+            color: #c0392b;
+        }
+        
+        .alert-High {
+            border-color: var(--warning-color);
+            background: rgba(243, 156, 18, 0.1);
+            color: #d68910;
+        }
+        
+        .alert-Medium {
+            border-color: #f1c40f;
+            background: rgba(241, 196, 15, 0.1);
+            color: #b7950b;
+        }
+        
+        .alert-Low {
+            border-color: var(--success-color);
+            background: rgba(39, 174, 96, 0.1);
+            color: #229954;
+        }
+        
+        .alert-icon {
+            font-size: 1.2rem;
+            margin-top: 0.2rem;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+        
+        .alert-description {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .alert-time {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-healthy {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .status-critical {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .status-indicator::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--border-color);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-refresh:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .model-item {
+            background: rgba(52, 73, 94, 0.05);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--accent-color);
+        }
+        
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        
+        .model-name {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .model-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .threat-item {
+            background: rgba(231, 76, 60, 0.05);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--danger-color);
+            transition: all 0.3s ease;
+        }
+        
+        .threat-item:hover {
+            background: rgba(231, 76, 60, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .threat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .threat-name {
+            font-weight: bold;
+            color: var(--danger-color);
+        }
+        
+        .threat-count {
+            background: var(--danger-color);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid,
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-info {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🤖 {{.Title}}</h1>
+            <div class="subtitle">Provider: <strong>{{.Provider}}</strong> • Last Updated: {{.Timestamp}}</div>
+            <div class="status-info">
+                <div class="info-item">
+                    <span>Health:</span>
+                    <span class="status-indicator status-{{.HealthStatus}}">{{.HealthStatus}}</span>
+                </div>
+                <div class="info-item">
+                    <span>Total Requests:</span>
+                    <strong>{{.RequestStats.TotalRequests}}</strong>
+                </div>
+                <div class="info-item">
+                    <span>Success Rate:</span>
+                    <strong>{{printf "%.1f" .RequestStats.SuccessRate}}%</strong>
+                </div>
+                <div class="info-item">
+                    <span>Total Tokens:</span>
+                    <strong>{{.TokenUsage.TotalTokens}}</strong>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <div class="nav-links">
+            <a href="/admin/llm" class="active">📊 Dashboard</a>
+            <a href="/admin/llm/tokens">🪙 Token Usage</a>
+            <a href="/admin/llm/threats">🚨 Threat Analysis</a>
+            <a href="/admin/llm/models">🤖 Model Statistics</a>
+            <a href="/admin/llm/policies">🔒 LLM Policies</a>
+            <a href="/admin/alerts">⚠️ Security Alerts</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <!-- Quick Stats Row -->
+        <div class="stats-row">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <h3>Requests</h3>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total:</span>
+                    <span class="metric-value large">{{.RequestStats.TotalRequests}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Blocked:</span>
+                    <span class="metric-value">{{.RequestStats.BlockedRequests}}</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🪙</div>
+                    <h3>Tokens</h3>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total:</span>
+                    <span class="metric-value large">{{.TokenUsage.TotalTokens}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Today:</span>
+                    <span class="metric-value">{{.TokenUsage.TodayUsage}}</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💰</div>
+                    <h3>Cost</h3>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Estimated:</span>
+                    <span class="metric-value large">${{printf "%.2f" .TokenUsage.CostEstimateUSD}}</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔒</div>
+                    <h3>Security</h3>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Policies:</span>
+                    <span class="metric-value">{{.LLMPolicies}}/{{.ActivePolicies}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Alerts:</span>
+                    <span class="metric-value">{{len .RecentAlerts}}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Top Models -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🤖</div>
+                    <h3>Top Models</h3>
+                </div>
+                <div class="list-container">
+                    {{if .TokenUsage.TopModels}}
+                        {{range .TokenUsage.TopModels}}
+                        <div class="model-item">
+                            <div class="model-header">
+                                <span class="model-name">{{.Model}}</span>
+                                <span class="metric-value">{{.Tokens}} tokens</span>
+                            </div>
+                            <div class="progress-container">
+                                {{$percentage := (printf "%.1f" (mul (div (printf "%.2f" .Tokens) (printf "%.2f" $.TokenUsage.TotalTokens)) 100.0))}}
+                                <div class="progress-label">
+                                    <span>{{.Requests}} requests</span>
+                                    <span>{{$percentage}}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{$percentage}}%;"></div>
+                                </div>
+                            </div>
+                            <div class="model-stats">
+                                <span>Avg: {{printf "%.0f" .AvgTokens}} tokens</span>
+                                <span>Cost: ${{printf "%.2f" .CostUSD}}</span>
+                            </div>
+                        </div>
+                        {{end}}
+                    {{else}}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🤖</div>
+                            <p>No model usage data available</p>
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+            
+            <!-- Top Threats -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🚨</div>
+                    <h3>Security Threats</h3>
+                </div>
+                <div class="list-container">
+                    {{if .RequestStats.TopThreats}}
+                        {{range .RequestStats.TopThreats}}
+                        <div class="threat-item">
+                            <div class="threat-header">
+                                <span class="threat-name">{{.Category}}</span>
+                                <span class="threat-count">{{.Count}}</span>
+                            </div>
+                            <p class="alert-description">{{.Description}}</p>
+                            <p class="alert-time">Last seen: {{.LastSeen.Format "15:04:05"}}</p>
+                        </div>
+                        {{end}}
+                    {{else}}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🛡️</div>
+                            <p>No threats detected</p>
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+            
+            <!-- Recent Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚠️</div>
+                    <h3>Recent Alerts</h3>
+                </div>
+                <div class="list-container">
+                    {{if .RecentAlerts}}
+                        {{range .RecentAlerts}}
+                        <div class="alert alert-{{.Severity}}">
+                            <div class="alert-icon">
+                                {{if eq .Severity "Critical"}}🔴{{else if eq .Severity "High"}}🟠{{else if eq .Severity "Medium"}}🟡{{else}}🟢{{end}}
+                            </div>
+                            <div class="alert-content">
+                                <div class="alert-title">{{.AlertType}}</div>
+                                <div class="alert-description">{{.Description}}</div>
+                                <div class="alert-time">{{.Timestamp.Format "15:04:05"}}</div>
+                            </div>
+                        </div>
+                        {{end}}
+                    {{else}}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✅</div>
+                            <p>No recent alerts</p>
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="auto-refresh" onclick="location.reload()" title="Auto-refresh every 30 seconds">
+        🔄
+    </div>
+    
+    <script>
+        // Auto-refresh dashboard every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+        
+        // Add smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Add hover effects for cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>

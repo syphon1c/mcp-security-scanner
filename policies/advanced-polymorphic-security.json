@@ -1,6 +1,7 @@
 {
   "version": "1.0.0",
   "policyName": "advanced-polymorphic-security",
+  "policy_type": "mcp",
   "description": "Advanced security policy with polymorphic and behavioral pattern detection",
   "severity": "High",
   "rules": [

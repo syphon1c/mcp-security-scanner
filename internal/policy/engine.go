@@ -154,6 +154,29 @@ func (e *Engine) GetAllPolicies() map[string]*types.SecurityPolicy {
 	return e.policies
 }
 
+// GetPoliciesByType returns policies filtered by type (MCP or LLM)
+func (e *Engine) GetPoliciesByType(policyType types.PolicyType) map[string]*types.SecurityPolicy {
+	filtered := make(map[string]*types.SecurityPolicy)
+
+	for name, policy := range e.policies {
+		if policy.GetPolicyType() == policyType {
+			filtered[name] = policy
+		}
+	}
+
+	return filtered
+}
+
+// GetMCPPolicies returns only MCP-specific policies
+func (e *Engine) GetMCPPolicies() map[string]*types.SecurityPolicy {
+	return e.GetPoliciesByType(types.PolicyTypeMCP)
+}
+
+// GetLLMPolicies returns only LLM-specific policies
+func (e *Engine) GetLLMPolicies() map[string]*types.SecurityPolicy {
+	return e.GetPoliciesByType(types.PolicyTypeLLM)
+}
+
 // ValidatePolicy validates a policy structure
 func (e *Engine) ValidatePolicy(policy *types.SecurityPolicy) error {
 	if policy.Version == "" {

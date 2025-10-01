@@ -8,6 +8,7 @@ All MCP security policies follow a standardised JSON structure:
 
 ```json
 {
+  "policy_type": "mcp",
   "policyName": "policy-identifier",
   "version": "1.0",
   "description": "Policy description",
@@ -18,12 +19,20 @@ All MCP security policies follow a standardised JSON structure:
 }
 ```
 
-## Basic Security Policy
+### Policy Types
+
+The `policy_type` field determines which scanner component will load the policy:
+
+- **`"mcp"`** - MCP server security policies (for `mcpscan proxy` and `mcpscan scan-*`)
+- **`"llm"`** - LLM API security policies (for `mcpscan llm-proxy`)
+
+## Basic MCP Security Policy
 
 A minimal security policy for general MCP server protection:
 
 ```json
 {
+  "policy_type": "mcp",
   "policyName": "basic-security",
   "version": "1.0",
   "description": "Basic security policy for MCP servers",
@@ -141,6 +150,7 @@ Relaxed policy for development environments:
 
 ```json
 {
+  "policy_type": "mcp",
   "policyName": "development-security",
   "version": "1.0",
   "description": "Development-friendly security policy with warnings",
@@ -187,12 +197,114 @@ Relaxed policy for development environments:
 }
 ```
 
+## LLM Security Policy
+
+Security policy specifically designed for LLM API protection:
+
+```json
+{
+  "policy_type": "llm",
+  "policyName": "llm-security",
+  "version": "1.0",
+  "description": "LLM-specific security patterns for OpenAI, Claude, and other LLM APIs",
+  "rules": [
+    {
+      "id": "LLM_PROMPT_INJECTION_001",
+      "category": "ai_security",
+      "severity": "Critical",
+      "title": "Prompt Injection Attack",
+      "description": "Attempts to override AI instructions using prompt injection techniques",
+      "patterns": [
+        "ignore previous instructions",
+        "ignore all previous instructions",
+        "disregard previous instructions",
+        "forget previous instructions",
+        "\\n\\nHuman:",
+        "\\n\\nAssistant:",
+        "SYSTEM:\\s*Now you are",
+        "<!-- Ignore everything above",
+        "\\[INST\\].*\\[/INST\\]",
+        "{{.*system.*}}",
+        "pretend you are not an AI"
+      ]
+    },
+    {
+      "id": "LLM_JAILBREAKING_001",
+      "category": "ai_security",
+      "severity": "Critical",
+      "title": "AI Jailbreaking Attempt",
+      "description": "Attempts to bypass AI safety mechanisms",
+      "patterns": [
+        "act as if you are",
+        "pretend to be",
+        "roleplay as",
+        "simulate being",
+        "jailbreak",
+        "bypass.*safety.*mechanism",
+        "ignore.*safety.*guidelines",
+        "disable.*content.*filter"
+      ]
+    },
+    {
+      "id": "LLM_PII_EXTRACTION_001",
+      "category": "data_protection",
+      "severity": "High",
+      "title": "PII Extraction Attempt",
+      "description": "Attempts to extract personally identifiable information",
+      "patterns": [
+        "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b",
+        "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+        "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+        "sk-[a-zA-Z0-9]{32,}",
+        "(?i)(api.key|token|secret)\\s*[=:]\\s*[a-zA-Z0-9]+"
+      ]
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "ignore previous instructions",
+      "type": "contains",
+      "category": "prompt_injection",
+      "description": "Block prompt injection attempts",
+      "reason": "Prompt injection attempt"
+    },
+    {
+      "pattern": "act as if you are",
+      "type": "contains", 
+      "category": "jailbreaking",
+      "description": "Block role-playing jailbreak attempts",
+      "reason": "Jailbreaking attempt"
+    },
+    {
+      "pattern": "sk-[a-zA-Z0-9]{32,}",
+      "type": "regex",
+      "category": "secret_exposure",
+      "description": "Block OpenAI API keys",
+      "reason": "OpenAI API key detected"
+    }
+  ],
+  "riskThresholds": {
+    "critical": 8,
+    "high": 5,
+    "medium": 3,
+    "low": 1
+  },
+  "settings": {
+    "strictMode": true,
+    "blockOnCritical": true,
+    "enableTokenMonitoring": true,
+    "maxTokensPerRequest": 4000
+  }
+}
+```
+
 ## Financial Services Policy
 
 Specialised policy for financial sector compliance:
 
 ```json
 {
+  "policy_type": "mcp",
   "policyName": "financial-security",
   "version": "1.0",
   "description": "Financial services security policy with PCI-DSS compliance",

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Alerts - LLM Security</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--warning-color), #d68910);
+            color: white;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            margin-left: 0.8rem;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--warning-color), #d68910);
+            color: white;
+        }
+        
+        .alert-item {
+            padding: 1.2rem;
+            margin: 0.8rem 0;
+            border-radius: 10px;
+            border-left: 4px solid var(--warning-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .alert-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .alert-critical {
+            background: rgba(231, 76, 60, 0.05);
+            border-left-color: var(--danger-color);
+        }
+        
+        .alert-high {
+            background: rgba(243, 156, 18, 0.05);
+            border-left-color: var(--warning-color);
+        }
+        
+        .alert-medium {
+            background: rgba(241, 196, 15, 0.05);
+            border-left-color: #b7950b;
+        }
+        
+        .alert-low {
+            background: rgba(52, 152, 219, 0.05);
+            border-left-color: var(--info-color);
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+        
+        .alert-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .alert-timestamp {
+            font-size: 0.8rem;
+            color: var(--border-color);
+            white-space: nowrap;
+        }
+        
+        .alert-details {
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .alert-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .severity-critical {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .severity-high {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .severity-medium {
+            background: rgba(241, 196, 15, 0.1);
+            color: #b7950b;
+        }
+        
+        .severity-low {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--info-color);
+        }
+        
+        .alert-actions {
+            display: flex;
+            gap: 0.3rem;
+        }
+        
+        .btn {
+            padding: 0.3rem 0.6rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-acknowledge {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-acknowledge:hover {
+            background: #229954;
+        }
+        
+        .btn-dismiss {
+            background: var(--border-color);
+            color: white;
+        }
+        
+        .btn-dismiss:hover {
+            background: var(--secondary-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--border-color);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--warning-color);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-refresh:hover {
+            background: #d68910;
+            transform: scale(1.1);
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .filter-tab.active {
+            background: var(--warning-color);
+            color: white;
+            border-color: var(--warning-color);
+        }
+        
+        .filter-tab:hover {
+            background: var(--background-color);
+        }
+        
+        .filter-tab.active:hover {
+            background: #d68910;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .alert-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .alert-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>⚠️ Security Alerts</h1>
+            <p>Real-time security alert monitoring and incident management</p>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <div class="nav-links">
+            <a href="/admin/llm">📊 Dashboard</a>
+            <a href="/admin/llm/tokens">🪙 Token Usage</a>
+            <a href="/admin/llm/threats">🚨 Threat Analysis</a>
+            <a href="/admin/llm/models">🤖 Model Statistics</a>
+            <a href="/admin/llm/policies">🔒 LLM Policies</a>
+            <a href="/admin/alerts" class="active">⚠️ Security Alerts</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Alert Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <h3>Alert Overview</h3>
+                </div>
+                <div id="alert-overview">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading alert data...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🚨</div>
+                    <h3>Recent Alerts</h3>
+                </div>
+                <div class="filter-tabs">
+                    <div class="filter-tab active" data-filter="all">All</div>
+                    <div class="filter-tab" data-filter="critical">Critical</div>
+                    <div class="filter-tab" data-filter="high">High</div>
+                    <div class="filter-tab" data-filter="unread">Unread</div>
+                </div>
+                <div class="list-container" id="recent-alerts">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading recent alerts...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alert Categories -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <h3>Alert Categories</h3>
+                </div>
+                <div class="list-container" id="alert-categories">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading categories...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alert Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Alert Management</h3>
+                </div>
+                <div id="alert-management">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading management options...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="auto-refresh" onclick="location.reload()" title="Auto-refresh every 30 seconds">
+        🔄
+    </div>
+    
+    <script>
+        let currentFilter = 'all';
+        let alerts = [];
+        
+        // Load alert data
+        function loadAlertData() {
+            Promise.all([
+                fetch('/api/alerts').then(r => r.json()),
+                fetch('/api/llm/stats').then(r => r.json())
+            ]).then(([alertData, stats]) => {
+                alerts = alertData || [];
+                updateAlertOverview(stats);
+                updateRecentAlerts(alerts);
+                updateAlertCategories(alerts);
+                updateAlertManagement(alerts);
+            }).catch(err => {
+                console.error('Failed to load alert data:', err);
+                showError('Failed to load alert data');
+            });
+        }
+        
+        function updateAlertOverview(stats) {
+            const container = document.getElementById('alert-overview');
+            
+            const totalAlerts = stats.total_alerts || 0;
+            const criticalAlerts = stats.critical_alerts || 0;
+            const unreadAlerts = stats.unread_alerts || 0;
+            const alertRate = stats.alert_rate || 0;
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: rgba(231, 76, 60, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--danger-color);">${criticalAlerts}</div>
+                        <div style="font-size: 0.9rem; color: var(--danger-color);">Critical</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(243, 156, 18, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">${unreadAlerts}</div>
+                        <div style="font-size: 0.9rem; color: var(--warning-color);">Unread</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 73, 94, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${totalAlerts}</div>
+                        <div style="font-size: 0.9rem; color: var(--primary-color);">Total (24h)</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--info-color);">${alertRate}</div>
+                        <div style="font-size: 0.9rem; color: var(--info-color);">Alerts/hr</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function updateRecentAlerts(alertsData) {
+            const container = document.getElementById('recent-alerts');
+            
+            if (!alertsData || alertsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <p>No alerts found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Filter alerts based on current filter
+            let filteredAlerts = alertsData;
+            if (currentFilter !== 'all') {
+                filteredAlerts = alertsData.filter(alert => {
+                    if (currentFilter === 'unread') return !alert.read;
+                    return alert.severity.toLowerCase() === currentFilter;
+                });
+            }
+            
+            // Sort by timestamp and take recent alerts
+            const sortedAlerts = filteredAlerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            let html = '';
+            sortedAlerts.slice(0, 20).forEach((alert, index) => {
+                const timeAgo = getTimeAgo(new Date(alert.timestamp));
+                const severityClass = `alert-${alert.severity.toLowerCase()}`;
+                const readClass = alert.read ? '' : 'font-weight: bold;';
+                const alertId = alert.id || `alert-${Date.parse(alert.timestamp)}-${index}`;
+                
+                html += `
+                    <div class="alert-item ${severityClass}">
+                        <div class="alert-header">
+                            <div>
+                                <div class="alert-title" style="${readClass} color: var(--${getSeverityColor(alert.severity)});">
+                                    ${alert.alertType || alert.title || 'Security Alert'}
+                                </div>
+                                <div class="alert-timestamp">${timeAgo}</div>
+                            </div>
+                        </div>
+                        <div class="alert-details">
+                            ${alert.description}
+                        </div>
+                        <div class="alert-meta">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="severity-badge severity-${alert.severity.toLowerCase()}">${alert.severity}</span>
+                                <span style="font-size: 0.8rem; color: var(--border-color);">${alert.alertType || alert.category || 'General'}</span>
+                            </div>
+                            <div class="alert-actions">
+                                ${!alert.read ? '<button class="btn btn-acknowledge" onclick="acknowledgeAlert(\'' + alertId + '\')">Acknowledge</button>' : ''}
+                                <button class="btn btn-dismiss" onclick="dismissAlert('${alertId}')">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <p>No alerts match the current filter</p>
+                </div>
+            `;
+        }
+        
+        function updateAlertCategories(alertsData) {
+            const container = document.getElementById('alert-categories');
+            
+            if (!alertsData || alertsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No alert categories</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group alerts by category
+            const categories = {};
+            alertsData.forEach(alert => {
+                const category = alert.alertType || alert.category || 'Other';
+                if (!categories[category]) {
+                    categories[category] = { count: 0, critical: 0, high: 0, medium: 0, low: 0 };
+                }
+                categories[category].count++;
+                categories[category][alert.severity.toLowerCase()]++;
+            });
+            
+            const maxCount = Math.max(...Object.values(categories).map(c => c.count));
+            
+            let html = '';
+            Object.entries(categories).forEach(([category, data]) => {
+                const percentage = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
+                html += `
+                    <div style="margin: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 500;">${category}</span>
+                            <span style="font-weight: bold; color: var(--warning-color);">${data.count}</span>
+                        </div>
+                        <div style="background: var(--background-color); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                            <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--warning-color), #d68910); border-radius: 4px;"></div>
+                        </div>
+                        <div style="display: flex; gap: 0.3rem; font-size: 0.8rem;">
+                            <span style="color: var(--danger-color);">Critical: ${data.critical}</span>
+                            <span style="color: var(--warning-color);">High: ${data.high}</span>
+                            <span style="color: #b7950b;">Medium: ${data.medium}</span>
+                            <span style="color: var(--info-color);">Low: ${data.low}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updateAlertManagement(alertsData) {
+            const container = document.getElementById('alert-management');
+            
+            const totalAlerts = alertsData.length;
+            const unreadAlerts = alertsData.filter(a => !a.read).length;
+            const criticalAlerts = alertsData.filter(a => a.severity === 'Critical').length;
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Quick Actions</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+                        <button class="btn btn-acknowledge" onclick="acknowledgeAllAlerts()" style="width: 100%; padding: 0.8rem;">
+                            ✅ Acknowledge All
+                        </button>
+                        <button class="btn btn-dismiss" onclick="clearAllAlerts()" style="width: 100%; padding: 0.8rem;">
+                            🗑️ Clear All
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Alert Statistics</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: center; padding: 0.8rem; background: rgba(243, 156, 18, 0.1); border-radius: 6px;">
+                            <div style="font-weight: bold; color: var(--warning-color);">${unreadAlerts}</div>
+                            <div style="font-size: 0.8rem; color: var(--warning-color);">Unread</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.8rem; background: rgba(231, 76, 60, 0.1); border-radius: 6px;">
+                            <div style="font-weight: bold; color: var(--danger-color);">${criticalAlerts}</div>
+                            <div style="font-size: 0.8rem; color: var(--danger-color);">Critical</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Notification Settings</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" checked style="transform: scale(1.2);">
+                            <span>Email notifications</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" checked style="transform: scale(1.2);">
+                            <span>Critical alerts only</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" style="transform: scale(1.2);">
+                            <span>SMS notifications</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getSeverityColor(severity) {
+            switch (severity.toLowerCase()) {
+                case 'critical': return 'danger-color';
+                case 'high': return 'warning-color';
+                case 'medium': return '#b7950b';
+                case 'low': return 'info-color';
+                default: return 'text-color';
+            }
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+        
+        function acknowledgeAlert(alertId) {
+            console.log('Acknowledge alert:', alertId);
+            // Update alert status
+            alerts = alerts.map((alert, index) => {
+                const currentId = alert.id || `alert-${Date.parse(alert.timestamp)}-${index}`;
+                return currentId === alertId ? { ...alert, read: true } : alert;
+            });
+            updateRecentAlerts(alerts);
+        }
+        
+        function dismissAlert(alertId) {
+            console.log('Dismiss alert:', alertId);
+            // Remove alert
+            alerts = alerts.filter((alert, index) => {
+                const currentId = alert.id || `alert-${Date.parse(alert.timestamp)}-${index}`;
+                return currentId !== alertId;
+            });
+            updateRecentAlerts(alerts);
+            updateAlertCategories(alerts);
+            updateAlertManagement(alerts);
+        }
+        
+        function acknowledgeAllAlerts() {
+            if (confirm('Are you sure you want to acknowledge all alerts?')) {
+                alerts = alerts.map(alert => ({ ...alert, read: true }));
+                updateRecentAlerts(alerts);
+                updateAlertManagement(alerts);
+            }
+        }
+        
+        function clearAllAlerts() {
+            if (confirm('Are you sure you want to clear all alerts? This action cannot be undone.')) {
+                alerts = [];
+                updateRecentAlerts(alerts);
+                updateAlertCategories(alerts);
+                updateAlertManagement(alerts);
+            }
+        }
+        
+        function showError(message) {
+            const containers = ['alert-overview', 'recent-alerts', 'alert-categories', 'alert-management'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❌</div>
+                            <p>${message}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Set up filter tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    updateRecentAlerts(alerts);
+                });
+            });
+        });
+        
+        // Load data on page load
+        loadAlertData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadAlertData, 30000);
+    </script>
+</body>
+</html>

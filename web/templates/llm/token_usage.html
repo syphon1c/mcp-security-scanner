@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Usage - LLM Security</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            margin-left: 0.8rem;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--info-color));
+            color: white;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: rgba(52, 73, 94, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .metric-value.large {
+            font-size: 2rem;
+        }
+        
+        .chart-container {
+            height: 300px;
+            background: rgba(52, 73, 94, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .chart-placeholder {
+            color: var(--border-color);
+            font-size: 1.1rem;
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-refresh:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🪙 Token Usage Analytics</h1>
+            <p>Real-time token consumption and cost analysis</p>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <div class="nav-links">
+            <a href="/admin/llm">📊 Dashboard</a>
+            <a href="/admin/llm/tokens" class="active">🪙 Token Usage</a>
+            <a href="/admin/llm/threats">🚨 Threat Analysis</a>
+            <a href="/admin/llm/models">🤖 Model Statistics</a>
+            <a href="/admin/llm/policies">🔒 LLM Policies</a>
+            <a href="/admin/alerts">⚠️ Security Alerts</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Token Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <h3>Token Overview</h3>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Tokens:</span>
+                    <span class="metric-value large" id="total-tokens">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Today's Usage:</span>
+                    <span class="metric-value" id="today-tokens">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Weekly Usage:</span>
+                    <span class="metric-value" id="weekly-tokens">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Estimated Cost:</span>
+                    <span class="metric-value" id="cost-estimate">$0.00</span>
+                </div>
+            </div>
+            
+            <!-- Token Usage by Model -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🤖</div>
+                    <h3>Usage by Model</h3>
+                </div>
+                <div id="model-usage-chart" class="chart-container">
+                    <div class="chart-placeholder">Loading model usage data...</div>
+                </div>
+            </div>
+            
+            <!-- Hourly Usage Pattern -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <h3>Hourly Usage Pattern</h3>
+                </div>
+                <div id="hourly-usage-chart" class="chart-container">
+                    <div class="chart-placeholder">Loading hourly usage data...</div>
+                </div>
+            </div>
+            
+            <!-- Cost Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💰</div>
+                    <h3>Cost Breakdown</h3>
+                </div>
+                <div id="cost-breakdown">
+                    <div class="chart-placeholder">Loading cost analysis...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="auto-refresh" onclick="location.reload()" title="Auto-refresh every 30 seconds">
+        🔄
+    </div>
+    
+    <script>
+        // Load token usage data
+        function loadTokenData() {
+            fetch('/api/llm/tokens')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('total-tokens').textContent = data.total_tokens.toLocaleString();
+                    document.getElementById('today-tokens').textContent = data.today_usage.toLocaleString();
+                    document.getElementById('weekly-tokens').textContent = data.weekly_usage.toLocaleString();
+                    document.getElementById('cost-estimate').textContent = '$' + data.cost_estimate_usd.toFixed(2);
+                    
+                    // Update model usage chart
+                    updateModelUsageChart(data.tokens_by_model);
+                    
+                    // Update hourly usage chart
+                    updateHourlyUsageChart(data.tokens_by_hour);
+                    
+                    // Update cost breakdown
+                    updateCostBreakdown(data);
+                })
+                .catch(err => {
+                    console.error('Failed to load token data:', err);
+                });
+        }
+        
+        function updateModelUsageChart(modelData) {
+            const container = document.getElementById('model-usage-chart');
+            if (!modelData || Object.keys(modelData).length === 0) {
+                container.innerHTML = '<div class="chart-placeholder">No model usage data available</div>';
+                return;
+            }
+            
+            const models = Object.keys(modelData);
+            const values = Object.values(modelData);
+            const maxValue = Math.max(...values);
+            
+            let html = '<div style="width: 100%; height: 100%;">';
+            models.forEach((model, index) => {
+                const percentage = (values[index] / maxValue) * 100;
+                html += `
+                    <div style="margin: 10px 0; display: flex; align-items: center;">
+                        <div style="width: 100px; font-weight: 500; font-size: 0.9rem;">${model}</div>
+                        <div style="flex: 1; background: var(--background-color); height: 20px; border-radius: 10px; margin: 0 10px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--accent-color), var(--info-color)); border-radius: 10px;"></div>
+                        </div>
+                        <div style="width: 80px; text-align: right; font-weight: bold; color: var(--primary-color);">${values[index].toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function updateHourlyUsageChart(hourlyData) {
+            const container = document.getElementById('hourly-usage-chart');
+            if (!hourlyData || Object.keys(hourlyData).length === 0) {
+                container.innerHTML = '<div class="chart-placeholder">No hourly usage data available</div>';
+                return;
+            }
+            
+            const hours = Object.keys(hourlyData).sort();
+            const values = hours.map(hour => hourlyData[hour]);
+            const maxValue = Math.max(...values);
+            
+            let html = '<div style="display: flex; align-items: end; height: 200px; gap: 4px; padding: 20px;">';
+            hours.forEach((hour, index) => {
+                const height = maxValue > 0 ? (values[index] / maxValue) * 160 : 5;
+                html += `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                        <div style="height: ${height}px; background: linear-gradient(to top, var(--accent-color), var(--info-color)); border-radius: 2px 2px 0 0; min-height: 2px; transition: all 0.3s ease; cursor: pointer;" title="${hour}: ${values[index]} tokens"></div>
+                        <div style="font-size: 0.7rem; margin-top: 5px; writing-mode: vertical-rl; text-orientation: mixed;">${hour.split(' ')[1]}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function updateCostBreakdown(data) {
+            const container = document.getElementById('cost-breakdown');
+            const costPerModel = {};
+            
+            // Calculate cost per model (rough estimation)
+            Object.keys(data.tokens_by_model || {}).forEach(model => {
+                const tokens = data.tokens_by_model[model];
+                costPerModel[model] = tokens * 0.00002; // $0.02 per 1K tokens average
+            });
+            
+            let html = '<div>';
+            Object.keys(costPerModel).forEach(model => {
+                const cost = costPerModel[model];
+                html += `
+                    <div class="metric">
+                        <span class="metric-label">${model}:</span>
+                        <span class="metric-value">$${cost.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            
+            if (Object.keys(costPerModel).length === 0) {
+                html = '<div class="chart-placeholder">No cost data available</div>';
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        // Load data on page load
+        loadTokenData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadTokenData, 30000);
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "policyName": "org-custom-template",
+  "policy_type": "mcp",
   "description": "Template policy for organisation-specific customisation - Copy and modify for your needs",
   "severity": "Medium",
   "author": "Organisation Security Team",

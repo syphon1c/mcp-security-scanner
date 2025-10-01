@@ -97,11 +97,17 @@ policies:
   default_policy: "standard-security"
   
   # Available security policies:
-  # - critical-security: Enterprise-grade threat detection (50+ rules)
-  # - standard-security: Balanced security assessment 
-  # - mcp-advanced-security: Advanced pattern recognition (159+ rules)
-  # - advanced-polymorphic-security: Policy-driven polymorphic detection (NEW)
-  # - org-custom-template: Template for creating organization-specific policies
+  # - critical-security: Enterprise-grade threat detection (50+ rules) [MCP]
+  # - standard-security: Balanced security assessment [MCP]
+  # - mcp-advanced-security: Advanced pattern recognition (159+ rules) [MCP]
+  # - advanced-polymorphic-security: Policy-driven polymorphic detection [MCP]
+  # - llm-security: LLM-specific threat detection for AI APIs [LLM]
+  # - org-custom-template: Template for creating organization-specific policies [MCP]
+  
+  # Policy Types:
+  # Each policy has a policy_type field that determines which scanner loads it:
+  # - "mcp": For MCP server security (mcpscan proxy, mcpscan scan-*)
+  # - "llm": For LLM API security (mcpscan llm-proxy)
   
   # Automatically reload policies when files change
   auto_reload: true

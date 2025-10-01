@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Analysis - LLM Security</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--danger-color), #c0392b);
+            color: white;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            margin-left: 0.8rem;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--danger-color), #c0392b);
+            color: white;
+        }
+        
+        .threat-item {
+            background: rgba(231, 76, 60, 0.05);
+            padding: 1rem;
+            margin: 0.8rem 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--danger-color);
+            transition: all 0.3s ease;
+        }
+        
+        .threat-item:hover {
+            background: rgba(231, 76, 60, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .threat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .threat-name {
+            font-weight: bold;
+            color: var(--danger-color);
+            font-size: 1.1rem;
+        }
+        
+        .threat-count {
+            background: var(--danger-color);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .severity-critical {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .severity-high {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .severity-medium {
+            background: rgba(241, 196, 15, 0.1);
+            color: #b7950b;
+        }
+        
+        .severity-low {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--border-color);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--danger-color);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-refresh:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🚨 Threat Analysis</h1>
+            <p>Real-time security threat monitoring and analysis</p>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <div class="nav-links">
+            <a href="/admin/llm">📊 Dashboard</a>
+            <a href="/admin/llm/tokens">🪙 Token Usage</a>
+            <a href="/admin/llm/threats" class="active">🚨 Threat Analysis</a>
+            <a href="/admin/llm/models">🤖 Model Statistics</a>
+            <a href="/admin/llm/policies">🔒 LLM Policies</a>
+            <a href="/admin/alerts">⚠️ Security Alerts</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Threat Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <h3>Threat Overview</h3>
+                </div>
+                <div id="threat-overview">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading threat data...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Threats -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🎯</div>
+                    <h3>Top Threats</h3>
+                </div>
+                <div class="list-container" id="top-threats">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading top threats...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Threat Categories -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <h3>Threat Categories</h3>
+                </div>
+                <div class="list-container" id="threat-categories">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading categories...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Threats -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⏰</div>
+                    <h3>Recent Activity</h3>
+                </div>
+                <div class="list-container" id="recent-threats">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading recent activity...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="auto-refresh" onclick="location.reload()" title="Auto-refresh every 30 seconds">
+        🔄
+    </div>
+    
+    <script>
+        // Load threat data
+        function loadThreatData() {
+            Promise.all([
+                fetch('/api/llm/threats').then(r => r.json()),
+                fetch('/api/llm/stats').then(r => r.json())
+            ]).then(([threats, stats]) => {
+                updateThreatOverview(stats.threats_by_category || {});
+                updateTopThreats(threats || []);
+                updateThreatCategories(stats.threats_by_category || {});
+                updateRecentThreats(threats || []);
+            }).catch(err => {
+                console.error('Failed to load threat data:', err);
+                showError('Failed to load threat data');
+            });
+        }
+        
+        function updateThreatOverview(threatsByCategory) {
+            const container = document.getElementById('threat-overview');
+            const totalThreats = Object.values(threatsByCategory).reduce((sum, count) => sum + count, 0);
+            
+            if (totalThreats === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <p>No threats detected</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const criticalCount = threatsByCategory['Prompt Injection'] || 0;
+            const highCount = threatsByCategory['Jailbreaking'] || 0;
+            const mediumCount = threatsByCategory['PII Exposure'] || 0;
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: rgba(231, 76, 60, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--danger-color);">${criticalCount}</div>
+                        <div style="font-size: 0.9rem; color: var(--danger-color);">Critical</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(243, 156, 18, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">${highCount}</div>
+                        <div style="font-size: 0.9rem; color: var(--warning-color);">High</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(241, 196, 15, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #b7950b;">${mediumCount}</div>
+                        <div style="font-size: 0.9rem; color: #b7950b;">Medium</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 73, 94, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${totalThreats}</div>
+                        <div style="font-size: 0.9rem; color: var(--primary-color);">Total</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function updateTopThreats(threats) {
+            const container = document.getElementById('top-threats');
+            
+            if (!threats || threats.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <p>No threats detected</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by count and take top 5
+            const sortedThreats = threats.sort((a, b) => b.count - a.count).slice(0, 5);
+            
+            let html = '';
+            sortedThreats.forEach(threat => {
+                html += `
+                    <div class="threat-item">
+                        <div class="threat-header">
+                            <span class="threat-name">${threat.category}</span>
+                            <span class="threat-count">${threat.count}</span>
+                        </div>
+                        <p style="color: var(--text-color); margin-bottom: 0.5rem;">${threat.description}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="severity-badge severity-${threat.severity.toLowerCase()}">${threat.severity}</span>
+                            <span style="font-size: 0.8rem; color: var(--border-color);">Last seen: ${new Date(threat.last_seen).toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updateThreatCategories(threatsByCategory) {
+            const container = document.getElementById('threat-categories');
+            
+            if (!threatsByCategory || Object.keys(threatsByCategory).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No threat categories</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const maxCount = Math.max(...Object.values(threatsByCategory));
+            
+            let html = '';
+            Object.entries(threatsByCategory).forEach(([category, count]) => {
+                const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                html += `
+                    <div style="margin: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 500;">${category}</span>
+                            <span style="font-weight: bold; color: var(--danger-color);">${count}</span>
+                        </div>
+                        <div style="background: var(--background-color); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--danger-color), #c0392b); border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updateRecentThreats(threats) {
+            const container = document.getElementById('recent-threats');
+            
+            if (!threats || threats.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⏰</div>
+                        <p>No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by last seen and take recent 10
+            const recentThreats = threats.sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen)).slice(0, 10);
+            
+            let html = '';
+            recentThreats.forEach(threat => {
+                const timeAgo = getTimeAgo(new Date(threat.last_seen));
+                html += `
+                    <div style="padding: 0.8rem; margin: 0.5rem 0; background: rgba(231, 76, 60, 0.05); border-radius: 6px; border-left: 3px solid var(--danger-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 500; color: var(--danger-color);">${threat.category}</span>
+                            <span style="font-size: 0.8rem; color: var(--border-color);">${timeAgo}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-color); margin-top: 0.3rem;">${threat.description}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+        
+        function showError(message) {
+            const containers = ['threat-overview', 'top-threats', 'threat-categories', 'recent-threats'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❌</div>
+                            <p>${message}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Load data on page load
+        loadThreatData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadThreatData, 30000);
+    </script>
+</body>
+</html>

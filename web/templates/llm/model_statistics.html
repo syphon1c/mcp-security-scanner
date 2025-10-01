@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Statistics - LLM Security</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--info-color), #2980b9);
+            color: white;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            margin-left: 0.8rem;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--info-color), #2980b9);
+            color: white;
+        }
+        
+        .model-item {
+            background: rgba(52, 152, 219, 0.05);
+            padding: 1.2rem;
+            margin: 0.8rem 0;
+            border-radius: 10px;
+            border-left: 4px solid var(--info-color);
+            transition: all 0.3s ease;
+        }
+        
+        .model-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        
+        .model-name {
+            font-weight: bold;
+            color: var(--info-color);
+            font-size: 1.1rem;
+        }
+        
+        .model-status {
+            padding: 0.2rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-online {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-offline {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .status-degraded {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .model-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--background-color);
+            border-radius: 6px;
+        }
+        
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--info-color);
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--border-color);
+            margin-top: 0.2rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--border-color);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--info-color);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-refresh:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .performance-chart {
+            width: 100%;
+            height: 200px;
+            background: var(--background-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--border-color);
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .model-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🤖 Model Statistics</h1>
+            <p>Monitor LLM model performance and usage metrics</p>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <div class="nav-links">
+            <a href="/admin/llm">📊 Dashboard</a>
+            <a href="/admin/llm/tokens">🪙 Token Usage</a>
+            <a href="/admin/llm/threats">🚨 Threat Analysis</a>
+            <a href="/admin/llm/models" class="active">🤖 Model Statistics</a>
+            <a href="/admin/llm/policies">🔒 LLM Policies</a>
+            <a href="/admin/alerts">⚠️ Security Alerts</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Model Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <h3>Model Overview</h3>
+                </div>
+                <div id="model-overview">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading model data...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Models -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🎯</div>
+                    <h3>Active Models</h3>
+                </div>
+                <div class="list-container" id="active-models">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading active models...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Model Performance -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚡</div>
+                    <h3>Performance Metrics</h3>
+                </div>
+                <div id="performance-metrics">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading performance data...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Usage Trends -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <h3>Usage Trends</h3>
+                </div>
+                <div id="usage-trends">
+                    <div class="performance-chart">
+                        Performance chart placeholder
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="auto-refresh" onclick="location.reload()" title="Auto-refresh every 30 seconds">
+        🔄
+    </div>
+    
+    <script>
+        // Load model data
+        function loadModelData() {
+            Promise.all([
+                fetch('/api/llm/models').then(r => r.json()),
+                fetch('/api/llm/stats').then(r => r.json())
+            ]).then(([models, stats]) => {
+                updateModelOverview(stats);
+                updateActiveModels(models || []);
+                updatePerformanceMetrics(stats);
+                updateUsageTrends(models || []);
+            }).catch(err => {
+                console.error('Failed to load model data:', err);
+                showError('Failed to load model data');
+            });
+        }
+        
+        function updateModelOverview(stats) {
+            const container = document.getElementById('model-overview');
+            
+            const totalModels = stats.total_models || 0;
+            const activeModels = stats.active_models || 0;
+            const avgLatency = stats.avg_latency || 0;
+            const totalRequests = stats.total_requests || 0;
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--info-color);">${totalModels}</div>
+                        <div style="font-size: 0.9rem; color: var(--info-color);">Total Models</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(39, 174, 96, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--success-color);">${activeModels}</div>
+                        <div style="font-size: 0.9rem; color: var(--success-color);">Active</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(241, 196, 15, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #b7950b;">${avgLatency}ms</div>
+                        <div style="font-size: 0.9rem; color: #b7950b;">Avg Latency</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 73, 94, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${totalRequests.toLocaleString()}</div>
+                        <div style="font-size: 0.9rem; color: var(--primary-color);">Requests</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function updateActiveModels(models) {
+            const container = document.getElementById('active-models');
+            
+            if (!models || models.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🤖</div>
+                        <p>No models configured</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            models.forEach(model => {
+                const statusClass = model.status === 'online' ? 'status-online' : 
+                                   model.status === 'degraded' ? 'status-degraded' : 'status-offline';
+                
+                html += `
+                    <div class="model-item">
+                        <div class="model-header">
+                            <span class="model-name">${model.name}</span>
+                            <span class="model-status ${statusClass}">${model.status}</span>
+                        </div>
+                        <p style="color: var(--text-color); margin-bottom: 0.8rem; font-size: 0.9rem;">${model.description || 'No description available'}</p>
+                        <div class="model-metrics">
+                            <div class="metric">
+                                <div class="metric-value">${model.requests || 0}</div>
+                                <div class="metric-label">Requests</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value">${model.latency || 0}ms</div>
+                                <div class="metric-label">Latency</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value">${model.tokens || 0}</div>
+                                <div class="metric-label">Tokens</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value">${model.errors || 0}</div>
+                                <div class="metric-label">Errors</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updatePerformanceMetrics(stats) {
+            const container = document.getElementById('performance-metrics');
+            
+            const errorRate = stats.error_rate || 0;
+            const successRate = 100 - errorRate;
+            const throughput = stats.throughput || 0;
+            const uptime = stats.uptime || 99.9;
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 500;">Success Rate</span>
+                        <span style="font-weight: bold; color: var(--success-color);">${successRate.toFixed(1)}%</span>
+                    </div>
+                    <div style="background: var(--background-color); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${successRate}%; height: 100%; background: linear-gradient(90deg, var(--success-color), #229954); border-radius: 4px;"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 500;">System Uptime</span>
+                        <span style="font-weight: bold; color: var(--info-color);">${uptime.toFixed(1)}%</span>
+                    </div>
+                    <div style="background: var(--background-color); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${uptime}%; height: 100%; background: linear-gradient(90deg, var(--info-color), #2980b9); border-radius: 4px;"></div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--info-color);">${throughput}</div>
+                        <div style="font-size: 0.8rem; color: var(--info-color);">Req/min</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(231, 76, 60, 0.1); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--danger-color);">${errorRate.toFixed(1)}%</div>
+                        <div style="font-size: 0.8rem; color: var(--danger-color);">Error Rate</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function updateUsageTrends(models) {
+            const container = document.getElementById('usage-trends');
+            
+            if (!models || models.length === 0) {
+                container.innerHTML = `
+                    <div class="performance-chart">
+                        No usage data available
+                    </div>
+                `;
+                return;
+            }
+            
+            // Simple text-based trend display
+            const totalRequests = models.reduce((sum, model) => sum + (model.requests || 0), 0);
+            const avgLatency = models.reduce((sum, model) => sum + (model.latency || 0), 0) / models.length;
+            
+            container.innerHTML = `
+                <div style="padding: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">24h Trends</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="text-align: center; padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--info-color);">${totalRequests}</div>
+                                <div style="font-size: 0.8rem; color: var(--info-color);">Total Requests</div>
+                                <div style="font-size: 0.7rem; color: var(--success-color); margin-top: 0.2rem;">↗ +12%</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: rgba(241, 196, 15, 0.1); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: #b7950b;">${avgLatency.toFixed(0)}ms</div>
+                                <div style="font-size: 0.8rem; color: #b7950b;">Avg Latency</div>
+                                <div style="font-size: 0.7rem; color: var(--success-color); margin-top: 0.2rem;">↘ -5%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 2rem; background: var(--background-color); border-radius: 8px; color: var(--border-color); font-style: italic;">
+                        📈 Performance charts coming soon
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showError(message) {
+            const containers = ['model-overview', 'active-models', 'performance-metrics', 'usage-trends'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❌</div>
+                            <p>${message}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Load data on page load
+        loadModelData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadModelData, 30000);
+    </script>
+</body>
+</html>

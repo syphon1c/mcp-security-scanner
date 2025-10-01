@@ -1,5 +1,6 @@
 {
   "policyName": "standard-security",
+  "policy_type": "mcp",
   "version": "2.0",
   "description": "Standard security patterns with reduced false positives for MCP servers",
   "severity": "High",
