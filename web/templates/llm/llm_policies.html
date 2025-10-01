@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Policies - LLM Security</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --info-color: #3498db;
+            --background-color: #ecf0f1;
+                           <div class="empty-state-icon">🔒</div>        --card-background: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #1a252f);
+            color: white;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .nav {
+            background: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--background-color);
+        }
+        
+        .card-header h3 {
+            font-size: 1.3rem;
+            margin-left: 0.8rem;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #1a252f);
+            color: white;
+        }
+        
+        .policy-item {
+            background: rgba(44, 62, 80, 0.05);
+            padding: 1.2rem;
+            margin: 0.8rem 0;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .policy-item:hover {
+            background: rgba(44, 62, 80, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .policy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        
+        .policy-name {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .policy-status {
+            padding: 0.2rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-inactive {
+            background: rgba(189, 195, 199, 0.1);
+            color: var(--border-color);
+        }
+        
+        .status-enforcing {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .policy-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+        }
+        
+        .detail-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--background-color);
+            border-radius: 6px;
+        }
+        
+        .detail-value {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--border-color);
+            margin-top: 0.2rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--border-color);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1a252f;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .auto-refresh:hover {
+            background: #1a252f;
+            transform: scale(1.1);
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .nav {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .policy-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🔒 LLM Policies</h1>
+            <p>Configure and manage LLM security policies and enforcement rules</p>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <div class="nav-links">
+            <a href="/admin/llm">📊 Dashboard</a>
+            <a href="/admin/llm/tokens">🪙 Token Usage</a>
+            <a href="/admin/llm/threats">🚨 Threat Analysis</a>
+            <a href="/admin/llm/models">🤖 Model Statistics</a>
+            <a href="/admin/llm/policies" class="active">🔒 LLM Policies</a>
+            <a href="/admin/alerts">⚠️ Security Alerts</a>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <!-- Policy Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <h3>Policy Overview</h3>
+                </div>
+                <div id="policy-overview">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading policy data...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Policies -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">✅</div>
+                    <h3>Active Policies</h3>
+                </div>
+                <div class="list-container" id="active-policies">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading active policies...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Policy Violations -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚠️</div>
+                    <h3>Recent Violations</h3>
+                </div>
+                <div class="list-container" id="policy-violations">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading violations...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Policy Management -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Policy Management</h3>
+                </div>
+                <div id="policy-management">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <p>Loading management options...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="auto-refresh" onclick="location.reload()" title="Auto-refresh every 30 seconds">
+        🔄
+    </div>
+    
+    <script>
+        console.log('LLM Policies page JavaScript loaded');
+        
+        // Load policy data
+        function loadPolicyData() {
+            console.log('loadPolicyData() called');
+            Promise.all([
+                fetch('/api/llm/policies').then(r => r.json()),
+                fetch('/api/llm/violations').then(r => r.json()),
+                fetch('/api/llm/stats').then(r => r.json())
+            ]).then(([policies, violations, stats]) => {
+                console.log('API responses received:', { policies, violations, stats });
+                updatePolicyOverview(stats);
+                updateActivePolicies(policies || []);
+                updatePolicyViolations(violations || []);
+                updatePolicyManagement(policies || []);
+            }).catch(err => {
+                console.error('Failed to load policy data:', err);
+                showError('Failed to load policy data');
+            });
+        }
+        
+        function updatePolicyOverview(stats) {
+            const container = document.getElementById('policy-overview');
+            
+            const totalPolicies = stats.total_policies || 0;
+            const activePolicies = stats.active_policies || 0;
+            const violations = stats.policy_violations || 0;
+            const enforcementRate = stats.enforcement_rate || 100;
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: rgba(44, 62, 80, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${totalPolicies}</div>
+                        <div style="font-size: 0.9rem; color: var(--primary-color);">Total Policies</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(39, 174, 96, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--success-color);">${activePolicies}</div>
+                        <div style="font-size: 0.9rem; color: var(--success-color);">Active</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(231, 76, 60, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--danger-color);">${violations}</div>
+                        <div style="font-size: 0.9rem; color: var(--danger-color);">Violations</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--info-color);">${enforcementRate}%</div>
+                        <div style="font-size: 0.9rem; color: var(--info-color);">Enforcement</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function updateActivePolicies(policies) {
+            console.log('updateActivePolicies called with:', policies);
+            const container = document.getElementById('active-policies');
+            console.log('Container element:', container);
+            
+            // Convert object to array if needed
+            let policyArray = [];
+            if (policies && typeof policies === 'object') {
+                if (Array.isArray(policies)) {
+                    policyArray = policies;
+                } else {
+                    // Convert object to array
+                    policyArray = Object.entries(policies).map(([key, policy]) => ({
+                        ...policy,
+                        name: policy.policyName || key,
+                        status: 'active', // Assume active if loaded
+                        rules: policy.rules ? policy.rules.length : 0,
+                        violations: 0 // We'll need to get this from stats
+                    }));
+                }
+            }
+            
+            console.log('Policy array after conversion:', policyArray);
+            
+            if (policyArray.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">�</div>
+                        <p>No policies configured</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            policyArray.forEach(policy => {
+                const statusClass = 'status-active'; // All loaded policies are active
+                
+                html += `
+                    <div class="policy-item">
+                        <div class="policy-header">
+                            <span class="policy-name">${policy.name}</span>
+                            <span class="policy-status ${statusClass}">Active</span>
+                        </div>
+                        <p style="color: var(--text-color); margin-bottom: 0.8rem; font-size: 0.9rem;">${policy.description || 'No description available'}</p>
+                        <div class="policy-details">
+                            <div class="detail-item">
+                                <div class="detail-value">${policy.rules || 0}</div>
+                                <div class="detail-label">Rules</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-value">${policy.violations || 0}</div>
+                                <div class="detail-label">Violations</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-value">${policy.severity || 'Medium'}</div>
+                                <div class="detail-label">Severity</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-value">${policy.version || '1.0'}</div>
+                                <div class="detail-label">Version</div>
+                            </div>
+                        </div>
+                        <div class="policy-actions">
+                            <button class="btn btn-view" onclick="viewPolicy('${policy.name}')">View Details</button>
+                            <button class="btn btn-edit" onclick="editPolicy('${policy.name}')">Edit</button>
+                            <button class="btn btn-disable" onclick="disablePolicy('${policy.name}')">Disable</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updatePolicyViolations(violations) {
+            const container = document.getElementById('policy-violations');
+            
+            if (!violations || violations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <p>No recent violations</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by timestamp and take recent 10
+            const recentViolations = violations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+            
+            let html = '';
+            recentViolations.forEach(violation => {
+                const timeAgo = getTimeAgo(new Date(violation.timestamp));
+                const severityClass = `severity-${violation.severity.toLowerCase()}`;
+                
+                html += `
+                    <div style="padding: 0.8rem; margin: 0.5rem 0; background: rgba(231, 76, 60, 0.05); border-radius: 6px; border-left: 3px solid var(--danger-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                            <span style="font-weight: 500; color: var(--danger-color);">${violation.policy_name}</span>
+                            <span style="font-size: 0.8rem; color: var(--border-color);">${timeAgo}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-color); margin-bottom: 0.3rem;">${violation.description}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="severity-badge ${severityClass}">${violation.severity}</span>
+                            <span style="font-size: 0.8rem; color: var(--border-color);">User: ${violation.user || 'Unknown'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updatePolicyManagement(policies) {
+            const container = document.getElementById('policy-management');
+            
+            // Convert object to array if needed (same logic as updateActivePolicies)
+            let policyArray = [];
+            if (policies && typeof policies === 'object') {
+                if (Array.isArray(policies)) {
+                    policyArray = policies;
+                } else {
+                    // Convert object to array
+                    policyArray = Object.entries(policies).map(([key, policy]) => ({
+                        ...policy,
+                        name: policy.policyName || key,
+                        status: 'active', // Assume active if loaded
+                        rules: policy.rules ? policy.rules.length : 0,
+                        violations: 0
+                    }));
+                }
+            }
+            
+            const totalPolicies = policyArray.length;
+            const activePolicies = policyArray.filter(p => p.status === 'active' || p.status === 'enforcing').length;
+            const inactivePolicies = totalPolicies - activePolicies;
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Quick Actions</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+                        <button class="btn btn-primary" onclick="createNewPolicy()" style="width: 100%; padding: 0.8rem;">
+                            ➕ New Policy
+                        </button>
+                        <button class="btn btn-success" onclick="enableAllPolicies()" style="width: 100%; padding: 0.8rem;">
+                            ✅ Enable All
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Policy Status</h4>
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 500;">Active Policies</span>
+                            <span style="font-weight: bold; color: var(--success-color);">${activePolicies}/${totalPolicies}</span>
+                        </div>
+                        <div style="background: var(--background-color); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${totalPolicies > 0 ? (activePolicies / totalPolicies) * 100 : 0}%; height: 100%; background: linear-gradient(90deg, var(--success-color), #229954); border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">System Settings</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" checked style="transform: scale(1.2);">
+                            <span>Enable policy enforcement</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" checked style="transform: scale(1.2);">
+                            <span>Log policy violations</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" style="transform: scale(1.2);">
+                            <span>Alert on critical violations</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+        
+        function editPolicy(policyId) {
+            console.log('Edit policy:', policyId);
+            alert(`Edit policy functionality for ${policyId} will be implemented`);
+        }
+        
+        function disablePolicy(policyId) {
+            console.log('Disable policy:', policyId);
+            if (confirm('Are you sure you want to disable this policy?')) {
+                alert(`Policy ${policyId} would be disabled`);
+            }
+        }
+        
+        function createNewPolicy() {
+            console.log('Create new policy');
+            alert('Create new policy functionality will be implemented');
+        }
+        
+        function enableAllPolicies() {
+            console.log('Enable all policies');
+            if (confirm('Are you sure you want to enable all policies?')) {
+                alert('All policies would be enabled');
+            }
+        }
+        
+        function showError(message) {
+            const containers = ['policy-overview', 'active-policies', 'policy-violations', 'policy-management'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❌</div>
+                            <p>${message}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Load data on page load
+        loadPolicyData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadPolicyData, 30000);
+    </script>
+</body>
+</html>
