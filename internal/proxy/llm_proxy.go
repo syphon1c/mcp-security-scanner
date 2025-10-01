@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,7 +12,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"crypto/md5"
 
 	"github.com/syphon1c/mcp-security-scanner/internal/analyzer"
 	"github.com/syphon1c/mcp-security-scanner/internal/integration"
@@ -28,11 +28,11 @@ type LLMProxy struct {
 	logChan         chan types.LLMProxyLog
 	alertProcessor  *integration.AlertProcessor
 	trafficAnalyzer *analyzer.AdvancedTrafficAnalyzer
-	
+
 	// LLM-specific configuration
-	maxTokens       int
-	blockStreaming  bool
-	provider        types.LLMProvider
+	maxTokens      int
+	blockStreaming bool
+	provider       types.LLMProvider
 }
 
 // NewLLMProxy creates a new LLM security proxy
@@ -68,15 +68,15 @@ func NewLLMProxy(targetURL string, policies map[string]*types.SecurityPolicy, po
 // Start begins the LLM proxy server
 func (p *LLMProxy) Start(port int) error {
 	mux := http.NewServeMux()
-	
+
 	// LLM API endpoints - catch all paths that might be LLM APIs
 	mux.HandleFunc("/", p.handleLLMProxy)
-	
+
 	// Monitoring endpoints (reuse existing pattern)
 	mux.HandleFunc("/monitor/health", p.handleHealth)
 	mux.HandleFunc("/monitor/alerts", p.handleAlerts)
 	mux.HandleFunc("/monitor/logs", p.handleLogs)
-	
+
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
 		Handler:      mux,
@@ -96,7 +96,7 @@ func (p *LLMProxy) Start(port int) error {
 func (p *LLMProxy) handleLLMProxy(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	requestID := p.generateRequestID()
-	
+
 	// Read request body for analysis
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -125,7 +125,7 @@ func (p *LLMProxy) handleLLMProxy(w http.ResponseWriter, r *http.Request) {
 
 	// Security analysis
 	securityContext := p.analyzeLLMRequest(llmRequest, r, requestID)
-	
+
 	// Check if request should be blocked
 	if securityContext.RiskLevel == "Critical" || len(securityContext.BlockedReasons) > 0 {
 		p.blockRequest(w, securityContext, startTime)
@@ -134,7 +134,7 @@ func (p *LLMProxy) handleLLMProxy(w http.ResponseWriter, r *http.Request) {
 
 	// Create reverse proxy
 	proxy := httputil.NewSingleHostReverseProxy(p.target)
-	
+
 	// Modify the request to target
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
@@ -142,7 +142,7 @@ func (p *LLMProxy) handleLLMProxy(w http.ResponseWriter, r *http.Request) {
 		req.Host = p.target.Host
 		req.URL.Scheme = p.target.Scheme
 		req.URL.Host = p.target.Host
-		
+
 		// Preserve original path
 		if !strings.HasPrefix(req.URL.Path, "/") {
 			req.URL.Path = "/" + req.URL.Path
@@ -161,12 +161,12 @@ func (p *LLMProxy) handleLLMProxy(w http.ResponseWriter, r *http.Request) {
 // analyzeLLMRequest performs security analysis on LLM requests
 func (p *LLMProxy) analyzeLLMRequest(request *types.LLMRequest, r *http.Request, requestID string) types.LLMSecurityContext {
 	context := types.LLMSecurityContext{
-		RequestID:    requestID,
-		Provider:     p.provider,
-		ClientIP:     r.RemoteAddr,
-		Timestamp:    time.Now(),
-		UserAgent:    r.UserAgent(),
-		RequestSize:  r.ContentLength,
+		RequestID:   requestID,
+		Provider:    p.provider,
+		ClientIP:    r.RemoteAddr,
+		Timestamp:   time.Now(),
+		UserAgent:   r.UserAgent(),
+		RequestSize: r.ContentLength,
 	}
 
 	if request == nil {
@@ -182,24 +182,24 @@ func (p *LLMProxy) analyzeLLMRequest(request *types.LLMRequest, r *http.Request,
 	for _, msg := range request.Messages {
 		content := msg.GetContentAsString()
 		allContent.WriteString(content + " ")
-		
+
 		// Check for prompt injection patterns
 		if p.containsPromptInjection(content) {
 			context.PromptInjection = true
 			context.BlockedReasons = append(context.BlockedReasons, "Prompt injection detected")
 		}
-		
+
 		// Check for jailbreaking attempts
 		if p.containsJailbreaking(content) {
 			context.Jailbreaking = true
 			context.BlockedReasons = append(context.BlockedReasons, "Jailbreaking attempt detected")
 		}
-		
+
 		// Check for PII
 		if p.containsPII(content) {
 			context.ContainsPII = true
 		}
-		
+
 		// Check for secrets
 		if p.containsSecrets(content) {
 			context.ContainsSecrets = true
@@ -228,11 +228,11 @@ func (p *LLMProxy) analyzeLLMRequest(request *types.LLMRequest, r *http.Request,
 			Evidence:    fmt.Sprintf("Risk score: %d, Reasons: %v", context.RiskScore, context.BlockedReasons),
 			Action:      "Monitor",
 		}
-		
+
 		if len(context.BlockedReasons) > 0 {
 			alert.Action = "Blocked"
 		}
-		
+
 		select {
 		case p.alertChan <- alert:
 		default:
@@ -258,19 +258,19 @@ func (p *LLMProxy) analyzeResponse(resp *http.Response, securityContext types.LL
 		for _, choice := range llmResponse.Choices {
 			if choice.Message != nil {
 				content := choice.Message.GetContentAsString()
-				
+
 				// Check for information disclosure
 				if p.containsSecrets(content) {
 					securityContext.ContainsSecrets = true
 				}
-				
+
 				// Check for PII in response
 				if p.containsPII(content) {
 					securityContext.ContainsPII = true
 				}
 			}
 		}
-		
+
 		// Update token counts
 		if llmResponse.Usage != nil {
 			securityContext.PromptTokenCount = llmResponse.Usage.PromptTokens
@@ -322,7 +322,7 @@ func (p *LLMProxy) containsPromptInjection(content string) bool {
 		"disregard safety guidelines",
 		"override previous context",
 	}
-	
+
 	content = strings.ToLower(content)
 	for _, pattern := range patterns {
 		if strings.Contains(content, strings.ToLower(pattern)) {
@@ -344,7 +344,7 @@ func (p *LLMProxy) containsJailbreaking(content string) bool {
 		"evil mode",
 		"unrestricted mode",
 	}
-	
+
 	content = strings.ToLower(content)
 	for _, pattern := range patterns {
 		if strings.Contains(content, strings.ToLower(pattern)) {
@@ -364,7 +364,7 @@ func (p *LLMProxy) containsPII(content string) bool {
 		"phone number:",
 		"address:",
 	}
-	
+
 	content = strings.ToLower(content)
 	for _, pattern := range patterns {
 		if strings.Contains(content, pattern) {
@@ -384,7 +384,7 @@ func (p *LLMProxy) containsSecrets(content string) bool {
 		"sk-",
 		"pk-",
 	}
-	
+
 	content = strings.ToLower(content)
 	for _, pattern := range patterns {
 		if strings.Contains(content, pattern) {
@@ -397,7 +397,7 @@ func (p *LLMProxy) containsSecrets(content string) bool {
 // Risk assessment methods
 func (p *LLMProxy) calculateLLMRiskScore(context types.LLMSecurityContext) int {
 	score := 0
-	
+
 	if context.PromptInjection {
 		score += 5
 	}
@@ -413,7 +413,7 @@ func (p *LLMProxy) calculateLLMRiskScore(context types.LLMSecurityContext) int {
 	if context.ExcessiveTokens {
 		score += 2
 	}
-	
+
 	return score
 }
 
@@ -489,13 +489,13 @@ func (p *LLMProxy) processLogs() {
 // Monitoring endpoints (reuse existing implementations)
 func (p *LLMProxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
-		"status":        "healthy",
-		"timestamp":     time.Now().Format(time.RFC3339),
-		"proxy_type":    "llm",
-		"target":        p.target.String(),
-		"provider":      string(p.provider),
-		"alerts_queue":  len(p.alertChan),
-		"logs_queue":    len(p.logChan),
+		"status":       "healthy",
+		"timestamp":    time.Now().Format(time.RFC3339),
+		"proxy_type":   "llm",
+		"target":       p.target.String(),
+		"provider":     string(p.provider),
+		"alerts_queue": len(p.alertChan),
+		"logs_queue":   len(p.logChan),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

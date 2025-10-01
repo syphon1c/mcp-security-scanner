@@ -2,6 +2,7 @@ package types
 
 import (
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -47,6 +48,7 @@ type MCPServerInfo struct {
 type SecurityPolicy struct {
 	Version             string               `json:"version"`
 	PolicyName          string               `json:"policyName"`
+	PolicyType          string               `json:"policy_type"`
 	Description         string               `json:"description"`
 	Severity            string               `json:"severity"`
 	Rules               []SecurityRule       `json:"rules"`
@@ -136,6 +138,47 @@ type RiskThresholds struct {
 	High     int `json:"high"`
 	Medium   int `json:"medium"`
 	Low      int `json:"low"`
+}
+
+// PolicyType represents the type of security policy
+type PolicyType string
+
+const (
+	PolicyTypeMCP PolicyType = "mcp"
+	PolicyTypeLLM PolicyType = "llm"
+)
+
+// GetPolicyType determines the type of policy based on explicit field or content inference
+func (p *SecurityPolicy) GetPolicyType() PolicyType {
+	// Check explicit policy_type field first
+	switch strings.ToLower(p.PolicyType) {
+	case "llm", "ai", "llm-security":
+		return PolicyTypeLLM
+	case "mcp", "mcp-security":
+		return PolicyTypeMCP
+	}
+	
+	// Fallback to content-based detection if policy_type field is missing or unrecognized
+	for _, rule := range p.Rules {
+		// Check for LLM-specific categories
+		if rule.Category == "ai_security" || rule.Category == "ai_specific" {
+			return PolicyTypeLLM
+		}
+		
+		// Check for LLM-specific rule IDs
+		if len(rule.ID) >= 4 && rule.ID[:4] == "LLM_" {
+			return PolicyTypeLLM
+		}
+	}
+	
+	// Check policy name for LLM indicators as final fallback
+	policyNameLower := strings.ToLower(p.PolicyName)
+	if strings.Contains(policyNameLower, "llm") || strings.Contains(policyNameLower, "ai") {
+		return PolicyTypeLLM
+	}
+	
+	// Default to MCP policy
+	return PolicyTypeMCP
 }
 
 // Scan Results

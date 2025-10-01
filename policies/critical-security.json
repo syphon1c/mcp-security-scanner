@@ -1,5 +1,6 @@
 {
   "policyName": "critical-security",
+  "policy_type": "mcp",
   "version": "2.0",
   "description": "Critical security patterns with reduced false positives for MCP servers",
   "severity": "Critical",

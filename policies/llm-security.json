@@ -1,5 +1,6 @@
 {
   "policyName": "llm-security",
+  "policy_type": "llm",
   "version": "1.0",
   "description": "LLM-specific security patterns for OpenAI, Claude, and other LLM APIs",
   "severity": "High",

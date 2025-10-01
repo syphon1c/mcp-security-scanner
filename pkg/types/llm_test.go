@@ -128,23 +128,23 @@ func TestNormalizeLLMRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := NormalizeLLMRequest([]byte(tt.rawJSON), tt.provider)
-			
+
 			if tt.expectErr {
 				if err == nil {
 					t.Error("Expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 				return
 			}
-			
+
 			if result.Provider != tt.provider {
 				t.Errorf("Expected provider %v, got %v", tt.provider, result.Provider)
 			}
-			
+
 			if tt.checkFunc != nil {
 				tt.checkFunc(result)
 			}
@@ -267,15 +267,15 @@ func TestLLMSecurityContext(t *testing.T) {
 	context := LLMSecurityContext{
 		RequestID:       "test-123",
 		Provider:        ProviderOpenAI,
-		Model:          "gpt-4",
-		ClientIP:       "192.168.1.100",
-		Timestamp:      time.Now(),
+		Model:           "gpt-4",
+		ClientIP:        "192.168.1.100",
+		Timestamp:       time.Now(),
 		PromptInjection: true,
-		Jailbreaking:   false,
-		ContainsPII:    true,
-		RiskScore:      7,
-		RiskLevel:      "High",
-		BlockedReasons: []string{"Prompt injection detected", "PII found"},
+		Jailbreaking:    false,
+		ContainsPII:     true,
+		RiskScore:       7,
+		RiskLevel:       "High",
+		BlockedReasons:  []string{"Prompt injection detected", "PII found"},
 	}
 
 	// Test JSON serialization

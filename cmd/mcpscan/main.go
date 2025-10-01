@@ -256,7 +256,19 @@ func handleProxy(config types.ScannerConfig, alertProcessor *integration.AlertPr
 		log.Fatalf("Failed to initialize scanner for policy loading: %v", err)
 	}
 
-	policies := mcpScanner.GetPolicyEngine().GetAllPolicies()
+	// Get only MCP-specific policies for the MCP proxy
+	policies := mcpScanner.GetPolicyEngine().GetMCPPolicies()
+	
+	// Log which policies are being used
+	if len(policies) == 0 {
+		fmt.Printf("Warning: No MCP-specific policies found. The proxy will load LLM policies as fallback.\n")
+		policies = mcpScanner.GetPolicyEngine().GetAllPolicies()
+	} else {
+		fmt.Printf("Loaded %d MCP-specific policies\n", len(policies))
+		for name := range policies {
+			fmt.Printf("  - %s\n", name)
+		}
+	}
 
 	// Create and start proxy
 	mcpProxy, err := proxy.NewProxy(targetURL, policies, config.PolicyDirectory, alertProcessor)
@@ -291,7 +303,7 @@ func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.Aler
 
 	targetURL := os.Args[2]
 	portStr := os.Args[3]
-	
+
 	// Optional policy parameter
 	var selectedPolicy string
 	if len(os.Args) == 5 {
@@ -309,15 +321,37 @@ func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.Aler
 		log.Fatalf("Failed to initialize scanner for policy loading: %v", err)
 	}
 
-	policies := mcpScanner.GetPolicyEngine().GetAllPolicies()
+	// Get only LLM-specific policies for the LLM proxy
+	policies := mcpScanner.GetPolicyEngine().GetLLMPolicies()
 	
-	// If specific policy selected, filter to just that policy
+	// If specific policy selected, filter to just that policy (if it's LLM-compatible)
 	if selectedPolicy != "" {
-		if policy, exists := policies[selectedPolicy]; exists {
-			policies = map[string]*types.SecurityPolicy{selectedPolicy: policy}
-			fmt.Printf("Using policy: %s\n", selectedPolicy)
+		allPolicies := mcpScanner.GetPolicyEngine().GetAllPolicies()
+		if policy, exists := allPolicies[selectedPolicy]; exists {
+			if policy.GetPolicyType() == types.PolicyTypeLLM {
+				policies = map[string]*types.SecurityPolicy{selectedPolicy: policy}
+				fmt.Printf("Using LLM policy: %s\n", selectedPolicy)
+			} else {
+				fmt.Printf("Warning: Policy '%s' is not an LLM policy. Using default LLM policies.\n", selectedPolicy)
+			}
 		} else {
-			fmt.Printf("Warning: Policy '%s' not found, using all available policies\n", selectedPolicy)
+			fmt.Printf("Warning: Policy '%s' not found. Using default LLM policies.\n", selectedPolicy)
+		}
+	}
+	
+	// Fallback to standard-security if no LLM policies found
+	if len(policies) == 0 {
+		fmt.Printf("Warning: No LLM-specific policies found. Using 'standard-security' as fallback.\n")
+		allPolicies := mcpScanner.GetPolicyEngine().GetAllPolicies()
+		if fallback, exists := allPolicies["standard-security"]; exists {
+			policies = map[string]*types.SecurityPolicy{"standard-security": fallback}
+		} else {
+			log.Fatalf("No suitable policies found for LLM proxy. Please ensure 'llm-security.json' exists in the policies directory.")
+		}
+	} else {
+		fmt.Printf("Loaded %d LLM-specific policies\n", len(policies))
+		for name := range policies {
+			fmt.Printf("  - %s\n", name)
 		}
 	}
 
