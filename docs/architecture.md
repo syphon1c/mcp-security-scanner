@@ -244,6 +244,7 @@ func (pe *PolicyEngine) EvaluatePatterns(content string, rules []SecurityRule) [
 **Policy Structure**:
 ```json
 {
+  "policy_type": "mcp",
   "policy_name": "critical-security",
   "version": "1.0",
   "description": "Critical security patterns",
@@ -267,11 +268,34 @@ func (pe *PolicyEngine) EvaluatePatterns(content string, rules []SecurityRule) [
 
 ### Security Policy Framework
 
-The MCP Security Scanner implements a  multi-policy security framework designed to address diverse threat landscapes and organisational requirements:
+The MCP Security Scanner implements a comprehensive multi-policy security framework designed to address diverse threat landscapes and organisational requirements. Policies are categorised by type to ensure appropriate loading by different scanner components.
+
+#### Policy Type System
+
+The scanner uses explicit policy type classification to ensure clean separation between different security domains:
+
+```json
+{
+  "policy_type": "mcp",  // or "llm"
+  "policyName": "example-policy",
+  // ... rest of policy
+}
+```
+
+**Policy Types**:
+- **`"mcp"`**: MCP server security policies
+  - Loaded by: `mcpscan proxy`, `mcpscan scan-local`, `mcpscan scan-remote`
+  - Focus: MCP protocol vulnerabilities, server-side security
+  - Examples: `critical-security`, `standard-security`, `mcp-advanced-security`
+
+- **`"llm"`**: LLM API security policies  
+  - Loaded by: `mcpscan llm-proxy`
+  - Focus: AI-specific threats, prompt injection, jailbreaking
+  - Examples: `llm-security`
 
 #### Available Security Policies
 
-1. **Critical Security Policy** (`critical-security.json`)
+1. **Critical Security Policy** (`critical-security.json`) - **[MCP]**
    - **Purpose**: Enterprise-grade threat detection for production environments
    - **Scope**: High-sensitivity pattern matching with strict security controls
    - **Rule Count**: 50+ critical vulnerability patterns
@@ -293,11 +317,21 @@ The MCP Security Scanner implements a  multi-policy security framework designed 
      - Zero-day pattern detection using heuristic analysis
    - **Use Cases**: Advanced threat hunting, research environments, high-security deployments
 
-4. **Custom Policy Template** (`org-custom-template.json`)
+4. **Custom Policy Template** (`org-custom-template.json`) - **[MCP]**
    - **Purpose**: Customisable security framework template for organisation-specific requirements
    - **Scope**: Template for data protection, compliance patterns, internal security standards
    - **Features**: Example patterns and configurable risk thresholds for customisation
    - **Use Cases**: Starting point for regulatory compliance, custom security requirements, internal governance
+
+5. **LLM Security Policy** (`llm-security.json`) - **[LLM]**
+   - **Purpose**: AI-specific threat detection for Large Language Model APIs
+   - **Scope**: Prompt injection, jailbreaking, PII protection, token monitoring
+   - **Capabilities**:
+     - Prompt injection detection across multiple LLM providers
+     - Jailbreaking attempt prevention
+     - PII and secret leakage protection
+     - Token usage monitoring and anomaly detection
+   - **Use Cases**: LLM API security, AI application protection, compliance monitoring
 
 #### Policy Selection Strategy
 

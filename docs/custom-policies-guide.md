@@ -36,12 +36,38 @@ Edit the policy metadata:
 
 ```json
 {
+  "policy_type": "mcp",
   "version": "1.0",
   "policyName": "your-company-security",
   "description": "Security policy for Your Company Name - Custom patterns and rules",
   "severity": "High",
   "author": "Your Security Team",
   "created": "2025-09-02"
+}
+```
+
+### Policy Type Selection
+
+The `policy_type` field determines which proxy will load your policy:
+
+- **`"mcp"`** - For MCP server security policies (loaded by `mcpscan proxy`)
+- **`"llm"`** - For LLM API security policies (loaded by `mcpscan llm-proxy`)
+
+Choose the appropriate type based on your policy's purpose:
+
+```json
+// For MCP server security
+{
+  "policy_type": "mcp",
+  "policyName": "company-mcp-security",
+  "description": "Custom MCP server security rules"
+}
+
+// For LLM API security  
+{
+  "policy_type": "llm",
+  "policyName": "company-llm-security", 
+  "description": "Custom LLM API security rules"
 }
 ```
 

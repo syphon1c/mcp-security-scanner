@@ -142,6 +142,7 @@ Create custom LLM security policies in the `policies/` directory:
 
 ```json
 {
+  "policy_type": "llm",
   "policyName": "my-llm-security",
   "version": "1.0",
   "description": "Custom LLM security policy",
@@ -170,6 +171,19 @@ Create custom LLM security policies in the `policies/` directory:
     "low": 5
   }
 }
+```
+
+**Important**: The `policy_type` field must be set to `"llm"` for policies to be loaded by the LLM proxy. Policies with `policy_type: "mcp"` will be ignored by the LLM proxy and vice versa.
+
+```bash
+# Copy template
+cp policies/llm-security.json policies/my-llm-policy.json
+
+# Edit with custom rules
+vim policies/my-llm-policy.json
+
+# Use custom policy
+./mcpscan llm-proxy https://api.openai.com 8080 my-llm-policy
 ```
 
 ## Provider-Specific Configuration
