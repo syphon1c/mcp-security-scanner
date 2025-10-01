@@ -715,27 +715,42 @@ func (a *LLMAdminServer) handleGetLLMDashboard(w http.ResponseWriter, r *http.Re
 	data := a.buildDashboardData()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleGetTokenUsage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(a.tokenUsage)
+	if err := json.NewEncoder(w).Encode(a.tokenUsage); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleGetRequestStats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(a.requestStats)
+	if err := json.NewEncoder(w).Encode(a.requestStats); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleGetThreats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(a.requestStats.TopThreats)
+	if err := json.NewEncoder(w).Encode(a.requestStats.TopThreats); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleGetModels(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(a.tokenUsage.TopModels)
+	if err := json.NewEncoder(w).Encode(a.tokenUsage.TopModels); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleGetLLMLogs(w http.ResponseWriter, r *http.Request) {
@@ -746,7 +761,10 @@ func (a *LLMAdminServer) handleGetLLMLogs(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
+	if err := json.NewEncoder(w).Encode(logs); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleGetLLMPolicies(w http.ResponseWriter, r *http.Request) {
@@ -758,17 +776,23 @@ func (a *LLMAdminServer) handleGetLLMPolicies(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(llmPolicies)
+	if err := json.NewEncoder(w).Encode(llmPolicies); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *LLMAdminServer) handleReloadLLMPolicies(w http.ResponseWriter, r *http.Request) {
 	// This would trigger a policy reload in the main application
 	// For now, just return success
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status":  "success",
 		"message": "LLM policies reload requested",
-	})
+	}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Page handlers (these would use templates if available)
@@ -841,7 +865,10 @@ func (a *LLMAdminServer) handleLLMAlertsPage(w http.ResponseWriter, r *http.Requ
 // handleGetAlerts returns security alerts for the API
 func (a *LLMAdminServer) handleGetAlerts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(a.alertHistory)
+	if err := json.NewEncoder(w).Encode(a.alertHistory); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // handleGetLLMViolations returns policy violations for the API
@@ -867,7 +894,10 @@ func (a *LLMAdminServer) handleGetLLMViolations(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	json.NewEncoder(w).Encode(violations)
+	if err := json.NewEncoder(w).Encode(violations); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // formatNumber formats large numbers with commas
