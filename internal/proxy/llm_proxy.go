@@ -2,7 +2,8 @@ package proxy
 
 import (
 	"bytes"
-	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -419,7 +420,12 @@ func (p *LLMProxy) determineLLMRiskLevel(score int) string {
 
 // Utility methods
 func (p *LLMProxy) generateRequestID() string {
-	return fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%d", time.Now().UnixNano()))))[:8]
+	bytes := make([]byte, 4)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to timestamp-based ID if random fails
+		return fmt.Sprintf("%x", time.Now().UnixNano())[:8]
+	}
+	return hex.EncodeToString(bytes)
 }
 
 func (p *LLMProxy) blockRequest(w http.ResponseWriter, context types.LLMSecurityContext, startTime time.Time) {
@@ -433,7 +439,9 @@ func (p *LLMProxy) blockRequest(w http.ResponseWriter, context types.LLMSecurity
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
-	json.NewEncoder(w).Encode(errorResponse)
+	if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
+		log.Printf("Failed to encode error response: %v", err)
+	}
 
 	// Log blocked request
 	blockedLog := types.LLMProxyLog{
@@ -498,7 +506,9 @@ func (p *LLMProxy) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode health response: %v", err)
+	}
 }
 
 func (p *LLMProxy) handleAlerts(w http.ResponseWriter, r *http.Request) {
@@ -509,7 +519,9 @@ func (p *LLMProxy) handleAlerts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode alerts response: %v", err)
+	}
 }
 
 func (p *LLMProxy) handleLogs(w http.ResponseWriter, r *http.Request) {
@@ -520,5 +532,7 @@ func (p *LLMProxy) handleLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode logs response: %v", err)
+	}
 }

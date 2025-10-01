@@ -1,6 +1,8 @@
 module github.com/syphon1c/mcp-security-scanner
 
-go 1.21
+go 1.24.0
+
+toolchain go1.24.7
 
 require (
 	github.com/gorilla/mux v1.8.1
@@ -9,4 +11,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require golang.org/x/net v0.17.0 // indirect
+require (
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
+)
