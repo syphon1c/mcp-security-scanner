@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
 	"github.com/syphon1c/mcp-security-scanner/pkg/types"
 )
 

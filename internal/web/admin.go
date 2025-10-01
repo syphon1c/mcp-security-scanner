@@ -590,7 +590,10 @@ func (a *AdminServer) handleUpdateRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Rule updated"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Rule updated"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleDeleteRule(w http.ResponseWriter, r *http.Request) {
@@ -626,7 +629,10 @@ func (a *AdminServer) handleDeleteRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Rule deleted"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Rule deleted"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleGetBlockedPatterns(w http.ResponseWriter, r *http.Request) {
@@ -652,7 +658,10 @@ func (a *AdminServer) handleGetBlockedPatterns(w http.ResponseWriter, r *http.Re
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(patterns)
+	if err := json.NewEncoder(w).Encode(patterns); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleAddBlockedPattern(w http.ResponseWriter, r *http.Request) {
@@ -756,7 +765,7 @@ func (a *AdminServer) savePolicyToFile(policyName string, policy *types.Security
 		return fmt.Errorf("failed to marshal policy: %v", err)
 	}
 
-	if err := os.WriteFile(filename, data, 0600); err != nil {
+	if err := os.WriteFile(filename, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write policy file: %v", err)
 	}
 
@@ -770,5 +779,5 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(dst, data, 0600)
+	return os.WriteFile(dst, data, 0o600)
 }
