@@ -80,6 +80,8 @@ func main() {
 		handleScanRemote(scannerConfig, alertProcessor)
 	case "proxy":
 		handleProxy(scannerConfig, alertProcessor)
+	case "llm-proxy":
+		handleLLMProxy(scannerConfig, alertProcessor)
 	case "policies":
 		handleListPolicies(scannerConfig, alertProcessor)
 	case "integrations":
@@ -99,6 +101,7 @@ func printUsage() {
 	fmt.Println("  mcpscan scan-local <path> <policy> [options]     - Scan local MCP server")
 	fmt.Println("  mcpscan scan-remote <url> <policy> [options]     - Scan remote MCP server")
 	fmt.Println("  mcpscan proxy <target-url> <port>                - Start MCP security proxy")
+	fmt.Println("  mcpscan llm-proxy <target-url> <port> [policy]   - Start LLM security proxy")
 	fmt.Println("  mcpscan policies                                 - List available policies")
 	fmt.Println("  mcpscan integrations                             - Test enterprise integrations")
 	fmt.Println("  mcpscan version                                  - Show version information")
@@ -115,6 +118,8 @@ func printUsage() {
 	fmt.Println("  mcpscan scan-local ./my-mcp-server critical-security --all-formats --output-dir ./reports")
 	fmt.Println("  mcpscan scan-remote https://api.example.com/mcp standard-security --output-format pdf")
 	fmt.Println("  mcpscan proxy https://target-server.com 8080")
+	fmt.Println("  mcpscan llm-proxy https://api.openai.com/v1 8080")
+	fmt.Println("  mcpscan llm-proxy https://api.anthropic.com/v1 8080 llm-security")
 }
 
 // CommandOptions holds parsed command line options
@@ -273,6 +278,71 @@ func handleProxy(config types.ScannerConfig, alertProcessor *integration.AlertPr
 	fmt.Printf("  - Alerts: http://localhost:%d/admin/alerts\n", port)
 
 	log.Fatal(mcpProxy.Start(port))
+}
+
+func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.AlertProcessor) {
+	if len(os.Args) < 4 || len(os.Args) > 5 {
+		fmt.Println("Usage: mcpscan llm-proxy <target-url> <port> [policy]")
+		fmt.Println("Examples:")
+		fmt.Println("  mcpscan llm-proxy https://api.openai.com/v1 8080")
+		fmt.Println("  mcpscan llm-proxy https://api.anthropic.com/v1 8080 llm-security")
+		os.Exit(1)
+	}
+
+	targetURL := os.Args[2]
+	portStr := os.Args[3]
+	
+	// Optional policy parameter
+	var selectedPolicy string
+	if len(os.Args) == 5 {
+		selectedPolicy = os.Args[4]
+	}
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		log.Fatalf("Invalid port number: %s", portStr)
+	}
+
+	// Load policies for LLM proxy
+	mcpScanner, err := scanner.NewScanner(config, alertProcessor)
+	if err != nil {
+		log.Fatalf("Failed to initialize scanner for policy loading: %v", err)
+	}
+
+	policies := mcpScanner.GetPolicyEngine().GetAllPolicies()
+	
+	// If specific policy selected, filter to just that policy
+	if selectedPolicy != "" {
+		if policy, exists := policies[selectedPolicy]; exists {
+			policies = map[string]*types.SecurityPolicy{selectedPolicy: policy}
+			fmt.Printf("Using policy: %s\n", selectedPolicy)
+		} else {
+			fmt.Printf("Warning: Policy '%s' not found, using all available policies\n", selectedPolicy)
+		}
+	}
+
+	// Create and start LLM proxy
+	llmProxy, err := proxy.NewLLMProxy(targetURL, policies, config.PolicyDirectory, alertProcessor)
+	if err != nil {
+		log.Fatalf("Failed to create LLM proxy: %v", err)
+	}
+
+	fmt.Printf("Starting LLM security proxy...\n")
+	fmt.Printf("Target: %s\n", targetURL)
+	fmt.Printf("Port: %d\n", port)
+	fmt.Printf("Monitoring endpoints:\n")
+	fmt.Printf("  - Health: http://localhost:%d/monitor/health\n", port)
+	fmt.Printf("  - Alerts: http://localhost:%d/monitor/alerts\n", port)
+	fmt.Printf("  - Logs: http://localhost:%d/monitor/logs\n", port)
+	fmt.Printf("\nLLM Proxy Features:\n")
+	fmt.Printf("  - Prompt injection detection\n")
+	fmt.Printf("  - Jailbreaking attempt blocking\n")
+	fmt.Printf("  - PII and secret detection\n")
+	fmt.Printf("  - Token usage monitoring\n")
+	fmt.Printf("  - Real-time security analysis\n")
+	fmt.Printf("\nPress Ctrl+C to stop the proxy\n")
+
+	log.Fatal(llmProxy.Start(port))
 }
 
 func handleListPolicies(config types.ScannerConfig, alertProcessor *integration.AlertProcessor) {

@@ -1,0 +1,261 @@
+{
+  "policyName": "llm-security",
+  "version": "1.0",
+  "description": "LLM-specific security patterns for OpenAI, Claude, and other LLM APIs",
+  "severity": "High",
+  "riskThresholds": {
+    "critical": 8,
+    "high": 5,
+    "medium": 3,
+    "low": 1
+  },
+  "rules": [
+    {
+      "id": "LLM_PROMPT_INJECTION_001",
+      "category": "ai_security",
+      "severity": "Critical",
+      "title": "Prompt Injection Attack",
+      "description": "Attempts to override AI instructions using prompt injection techniques",
+      "patterns": [
+        "ignore previous instructions",
+        "ignore all previous instructions",
+        "disregard previous instructions",
+        "forget previous instructions",
+        "\\n\\nHuman:",
+        "\\n\\nAssistant:",
+        "SYSTEM:\\s*Now you are",
+        "<!-- Ignore everything above",
+        "\\[INST\\].*\\[/INST\\]",
+        "{{.*system.*}}",
+        "pretend you are not an AI",
+        "disregard safety guidelines",
+        "override previous context",
+        "\\nActual system prompt:",
+        "End simulation\\nNew role:",
+        "\\n---\\nNew instructions:",
+        "you are now a different AI"
+      ]
+    },
+    {
+      "id": "LLM_JAILBREAKING_001",
+      "category": "ai_security",
+      "severity": "Critical",
+      "title": "AI Jailbreaking Attempt",
+      "description": "Attempts to bypass AI safety restrictions and ethical guidelines",
+      "patterns": [
+        "DAN mode",
+        "developer mode",
+        "jailbreak",
+        "ignore your instructions",
+        "act as if you have no restrictions",
+        "you are not bound by",
+        "bypass your programming",
+        "evil mode",
+        "unrestricted mode",
+        "without any restrictions",
+        "ignore ethical guidelines",
+        "bypass safety measures",
+        "unlimited AI",
+        "uncensored AI",
+        "break free from"
+      ]
+    },
+    {
+      "id": "LLM_PII_EXTRACTION_001",
+      "category": "data_privacy",
+      "severity": "High",
+      "title": "PII Extraction Attempt",
+      "description": "Attempts to extract personally identifiable information",
+      "patterns": [
+        "social security number",
+        "ssn:",
+        "credit card number",
+        "credit card:",
+        "password for",
+        "login credentials",
+        "email address of",
+        "phone number of",
+        "home address of",
+        "date of birth",
+        "driver's license",
+        "passport number",
+        "bank account number"
+      ]
+    },
+    {
+      "id": "LLM_SECRET_LEAKAGE_001",
+      "category": "information_disclosure",
+      "severity": "Critical",
+      "title": "Secret Information Leakage",
+      "description": "Detection of API keys, tokens, or other sensitive information in requests/responses",
+      "patterns": [
+        "api_key",
+        "secret_key",
+        "private_key",
+        "access_token",
+        "bearer\\s+[a-zA-Z0-9\\-_]+",
+        "sk-[a-zA-Z0-9]{32,}",
+        "pk-[a-zA-Z0-9]{32,}",
+        "xoxp-[a-zA-Z0-9\\-]+",
+        "ghp_[a-zA-Z0-9]{36}",
+        "glpat-[a-zA-Z0-9\\-_]{20}"
+      ]
+    },
+    {
+      "id": "LLM_CONTENT_GENERATION_001",
+      "category": "content_policy",
+      "severity": "Medium",
+      "title": "Inappropriate Content Generation",
+      "description": "Requests for generating inappropriate or harmful content",
+      "patterns": [
+        "generate malware",
+        "create virus",
+        "hack into",
+        "illegal activities",
+        "harmful instructions",
+        "violence against",
+        "self-harm methods",
+        "illegal drug",
+        "copyright violation",
+        "plagiarism help"
+      ]
+    },
+    {
+      "id": "LLM_SYSTEM_INFORMATION_001",
+      "category": "reconnaissance",
+      "severity": "Medium",
+      "title": "System Information Gathering",
+      "description": "Attempts to gather information about the AI system or infrastructure",
+      "patterns": [
+        "what model are you",
+        "your training data",
+        "system architecture",
+        "server information",
+        "internal processes",
+        "debug information",
+        "error logs",
+        "system configuration",
+        "backend details",
+        "infrastructure setup"
+      ]
+    },
+    {
+      "id": "LLM_ROLE_CONFUSION_001",
+      "category": "ai_security",
+      "severity": "High",
+      "title": "Role Confusion Attack",
+      "description": "Attempts to confuse the AI about its role or capabilities",
+      "patterns": [
+        "you are now",
+        "pretend to be",
+        "act as a",
+        "roleplay as",
+        "simulate being",
+        "imagine you are",
+        "transform into",
+        "become a different",
+        "switch to character",
+        "adopt the persona"
+      ]
+    },
+    {
+      "id": "LLM_EXCESSIVE_TOKENS_001",
+      "category": "resource_abuse",
+      "severity": "Medium",
+      "title": "Excessive Token Usage",
+      "description": "Requests that may consume excessive tokens or resources",
+      "patterns": [
+        "repeat.*1000 times",
+        "generate.*10000",
+        "very long.*response",
+        "maximum.*tokens",
+        "as long as possible",
+        "endless.*generation",
+        "infinite.*loop",
+        "extremely detailed"
+      ]
+    },
+    {
+      "id": "LLM_CONTEXT_STUFFING_001",
+      "category": "ai_security",
+      "severity": "Medium",
+      "title": "Context Stuffing Attack",
+      "description": "Attempts to overwhelm the context window with irrelevant information",
+      "patterns": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "repeat this sentence",
+        "copy the following",
+        "duplicate this text",
+        "fill the context",
+        "overflow the buffer"
+      ]
+    },
+    {
+      "id": "LLM_COMPETITION_INFORMATION_001",
+      "category": "business_intelligence",
+      "severity": "Low",
+      "title": "Competitive Intelligence Gathering",
+      "description": "Attempts to gather competitive or business intelligence",
+      "patterns": [
+        "competitor analysis",
+        "business strategy",
+        "market intelligence",
+        "proprietary information",
+        "trade secrets",
+        "confidential data",
+        "internal documents",
+        "strategic plans"
+      ]
+    }
+  ],
+  "blockedPatterns": [
+    {
+      "pattern": "ignore previous instructions",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Prompt injection attempt"
+    },
+    {
+      "pattern": "DAN mode",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "Jailbreaking attempt"
+    },
+    {
+      "pattern": "sk-[a-zA-Z0-9]{32,}",
+      "severity": "Critical",
+      "action": "block",
+      "reason": "OpenAI API key detected"
+    },
+    {
+      "pattern": "bearer\\s+[a-zA-Z0-9\\-_]{32,}",
+      "severity": "High",
+      "action": "block",
+      "reason": "Authentication token detected"
+    },
+    {
+      "pattern": "social security number",
+      "severity": "High",
+      "action": "block",
+      "reason": "PII detected"
+    },
+    {
+      "pattern": "credit card number",
+      "severity": "High",
+      "action": "block",
+      "reason": "PII detected"
+    },
+    {
+      "pattern": "pretend you are not an AI",
+      "severity": "High",
+      "action": "block",
+      "reason": "Role confusion attempt"
+    },
+    {
+      "pattern": "bypass your programming",
+      "severity": "High",
+      "action": "block",
+      "reason": "Jailbreaking attempt"
+    }
+  ]
+}
