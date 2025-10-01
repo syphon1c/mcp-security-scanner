@@ -31,7 +31,7 @@ func TestProxyCreation(t *testing.T) {
 	})
 
 	t.Run("InvalidURLProxyCreation", func(t *testing.T) {
-		_, err := proxy.NewProxy("://invalid-url", policies, alertProcessor)
+		_, err := proxy.NewProxy("://invalid-url", policies, "./policies", alertProcessor)
 		if err == nil {
 			t.Fatal("Expected error for invalid URL")
 		}

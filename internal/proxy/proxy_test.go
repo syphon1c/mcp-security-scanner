@@ -158,7 +158,7 @@ func TestNewProxy_ValidURLs(t *testing.T) {
 	alertProcessor := integration.NewAlertProcessor(cfg)
 
 	for _, validURL := range validURLs {
-		proxy, err := NewProxy(validURL, policies, alertProcessor)
+		proxy, err := NewProxy(validURL, policies, "./policies", alertProcessor)
 		if err != nil {
 			t.Errorf("Unexpected error for URL %s: %v", validURL, err)
 		}
