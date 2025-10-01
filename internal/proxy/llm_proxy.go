@@ -2,7 +2,8 @@ package proxy
 
 import (
 	"bytes"
-	"crypto/md5"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -419,7 +420,12 @@ func (p *LLMProxy) determineLLMRiskLevel(score int) string {
 
 // Utility methods
 func (p *LLMProxy) generateRequestID() string {
-	return fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%d", time.Now().UnixNano()))))[:8]
+	bytes := make([]byte, 4)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to timestamp-based ID if random fails
+		return fmt.Sprintf("%x", time.Now().UnixNano())[:8]
+	}
+	return hex.EncodeToString(bytes)
 }
 
 func (p *LLMProxy) blockRequest(w http.ResponseWriter, context types.LLMSecurityContext, startTime time.Time) {

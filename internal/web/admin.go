@@ -207,7 +207,10 @@ func (a *AdminServer) handlePoliciesPage(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(content)
+	if _, err := w.Write(content); err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) renderFallbackPolicies(w http.ResponseWriter) {
@@ -285,7 +288,10 @@ func (a *AdminServer) handleAlertsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(content)
+	if _, err := w.Write(content); err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) renderFallbackAlerts(w http.ResponseWriter) {
@@ -374,7 +380,10 @@ func (a *AdminServer) handleHealthPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(content)
+	if _, err := w.Write(content); err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) renderFallbackHealth(w http.ResponseWriter) {
@@ -473,7 +482,10 @@ func (a *AdminServer) handleGetPolicies(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(summaries)
+	if err := json.NewEncoder(w).Encode(summaries); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleGetRules(w http.ResponseWriter, r *http.Request) {
@@ -501,7 +513,10 @@ func (a *AdminServer) handleGetRules(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(rules)
+	if err := json.NewEncoder(w).Encode(rules); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleAddRule(w http.ResponseWriter, r *http.Request) {
@@ -530,7 +545,10 @@ func (a *AdminServer) handleAddRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Rule added"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Rule added"}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (a *AdminServer) handleUpdateRule(w http.ResponseWriter, r *http.Request) {
@@ -738,7 +756,7 @@ func (a *AdminServer) savePolicyToFile(policyName string, policy *types.Security
 		return fmt.Errorf("failed to marshal policy: %v", err)
 	}
 
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	if err := os.WriteFile(filename, data, 0600); err != nil {
 		return fmt.Errorf("failed to write policy file: %v", err)
 	}
 
@@ -752,5 +770,5 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(dst, data, 0644)
+	return os.WriteFile(dst, data, 0600)
 }

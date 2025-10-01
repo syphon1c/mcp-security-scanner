@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"github.com/syphon1c/mcp-security-scanner/pkg/types"
 )
 
@@ -500,7 +502,7 @@ func (a *LLMAdminServer) buildDashboardData() LLMDashboardData {
 
 	return LLMDashboardData{
 		Title:          "LLM Security Dashboard",
-		Provider:       strings.Title(a.provider),
+		Provider:       cases.Title(language.English).String(a.provider),
 		TokenUsage:     a.tokenUsage,
 		RequestStats:   a.requestStats,
 		RecentAlerts:   recentAlerts,
@@ -623,7 +625,7 @@ func (a *LLMAdminServer) renderFallbackLLMDashboard(w http.ResponseWriter) {
             <div class="threat-list">`,
 		data.Provider, data.Timestamp,
 		data.RequestStats.TotalRequests, data.RequestStats.BlockedRequests, data.RequestStats.SuccessRate,
-		data.HealthStatus, strings.Title(data.HealthStatus),
+		data.HealthStatus, cases.Title(language.English).String(data.HealthStatus),
 		formatNumber(data.TokenUsage.TotalTokens), formatNumber(data.TokenUsage.TodayUsage), data.TokenUsage.CostEstimateUSD,
 		data.ActivePolicies, data.LLMPolicies, len(data.RecentAlerts))
 
@@ -835,40 +837,6 @@ func (a *LLMAdminServer) handleLLMAlertsPage(w http.ResponseWriter, r *http.Requ
 }
 
 // Helper methods
-func (a *LLMAdminServer) renderSimplePage(w http.ResponseWriter, title string, content string) {
-	html := fmt.Sprintf(`<!DOCTYPE html>
-<html>
-<head>
-    <title>%s - LLM Security</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .nav { background: #34495e; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
-        .nav a { margin-right: 15px; text-decoration: none; color: #ecf0f1; padding: 8px 12px; border-radius: 3px; }
-        .nav a:hover { background: #2c3e50; }
-    </style>
-</head>
-<body>
-    <div class="nav">
-        <a href="/admin/llm">Dashboard</a>
-        <a href="/admin/llm/tokens">Token Usage</a>
-        <a href="/admin/llm/threats">Threat Analysis</a>
-        <a href="/admin/llm/models">Model Statistics</a>
-        <a href="/admin/llm/policies">LLM Policies</a>
-        <a href="/admin/alerts">Security Alerts</a>
-    </div>
-    %s
-</body>
-</html>`, title, content)
-
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, html)
-}
-
-func (a *LLMAdminServer) getAlertsJSON() string {
-	data, _ := json.Marshal(a.alertHistory)
-	return string(data)
-}
-
 // handleGetAlerts returns security alerts for the API
 func (a *LLMAdminServer) handleGetAlerts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
