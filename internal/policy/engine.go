@@ -157,13 +157,13 @@ func (e *Engine) GetAllPolicies() map[string]*types.SecurityPolicy {
 // GetPoliciesByType returns policies filtered by type (MCP or LLM)
 func (e *Engine) GetPoliciesByType(policyType types.PolicyType) map[string]*types.SecurityPolicy {
 	filtered := make(map[string]*types.SecurityPolicy)
-	
+
 	for name, policy := range e.policies {
 		if policy.GetPolicyType() == policyType {
 			filtered[name] = policy
 		}
 	}
-	
+
 	return filtered
 }
 

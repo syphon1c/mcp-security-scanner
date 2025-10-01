@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/syphon1c/mcp-security-scanner/internal/config"
@@ -258,7 +259,7 @@ func handleProxy(config types.ScannerConfig, alertProcessor *integration.AlertPr
 
 	// Get only MCP-specific policies for the MCP proxy
 	policies := mcpScanner.GetPolicyEngine().GetMCPPolicies()
-	
+
 	// Log which policies are being used
 	if len(policies) == 0 {
 		fmt.Printf("Warning: No MCP-specific policies found. The proxy will load LLM policies as fallback.\n")
@@ -293,7 +294,7 @@ func handleProxy(config types.ScannerConfig, alertProcessor *integration.AlertPr
 }
 
 func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.AlertProcessor) {
-	if len(os.Args) < 4 || len(os.Args) > 5 {
+	if len(os.Args) < 4 {
 		fmt.Println("Usage: mcpscan llm-proxy <target-url> <port> [policy]")
 		fmt.Println("Examples:")
 		fmt.Println("  mcpscan llm-proxy https://api.openai.com/v1 8080")
@@ -304,10 +305,16 @@ func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.Aler
 	targetURL := os.Args[2]
 	portStr := os.Args[3]
 
-	// Optional policy parameter
+	// Parse remaining arguments for policy
 	var selectedPolicy string
-	if len(os.Args) == 5 {
-		selectedPolicy = os.Args[4]
+
+	// Parse remaining arguments
+	args := os.Args[4:]
+	for i := 0; i < len(args); i++ {
+		// Assume it's a policy name if it doesn't start with --
+		if !strings.HasPrefix(args[i], "--") && selectedPolicy == "" {
+			selectedPolicy = args[i]
+		}
 	}
 
 	port, err := strconv.Atoi(portStr)
@@ -323,7 +330,7 @@ func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.Aler
 
 	// Get only LLM-specific policies for the LLM proxy
 	policies := mcpScanner.GetPolicyEngine().GetLLMPolicies()
-	
+
 	// If specific policy selected, filter to just that policy (if it's LLM-compatible)
 	if selectedPolicy != "" {
 		allPolicies := mcpScanner.GetPolicyEngine().GetAllPolicies()
@@ -338,7 +345,7 @@ func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.Aler
 			fmt.Printf("Warning: Policy '%s' not found. Using default LLM policies.\n", selectedPolicy)
 		}
 	}
-	
+
 	// Fallback to standard-security if no LLM policies found
 	if len(policies) == 0 {
 		fmt.Printf("Warning: No LLM-specific policies found. Using 'standard-security' as fallback.\n")
@@ -364,10 +371,18 @@ func handleLLMProxy(config types.ScannerConfig, alertProcessor *integration.Aler
 	fmt.Printf("Starting LLM security proxy...\n")
 	fmt.Printf("Target: %s\n", targetURL)
 	fmt.Printf("Port: %d\n", port)
+	fmt.Printf("Admin Interface: http://localhost:%d/admin\n", port)
 	fmt.Printf("Monitoring endpoints:\n")
 	fmt.Printf("  - Health: http://localhost:%d/monitor/health\n", port)
 	fmt.Printf("  - Alerts: http://localhost:%d/monitor/alerts\n", port)
 	fmt.Printf("  - Logs: http://localhost:%d/monitor/logs\n", port)
+	fmt.Printf("\nLLM Admin Interface:\n")
+	fmt.Printf("  - Dashboard: http://localhost:%d/admin/llm\n", port)
+	fmt.Printf("  - Token Usage: http://localhost:%d/admin/llm/tokens\n", port)
+	fmt.Printf("  - Threat Analysis: http://localhost:%d/admin/llm/threats\n", port)
+	fmt.Printf("  - Model Statistics: http://localhost:%d/admin/llm/models\n", port)
+	fmt.Printf("  - LLM Policies: http://localhost:%d/admin/llm/policies\n", port)
+	fmt.Printf("  - Security Alerts: http://localhost:%d/admin/alerts\n", port)
 	fmt.Printf("\nLLM Proxy Features:\n")
 	fmt.Printf("  - Prompt injection detection\n")
 	fmt.Printf("  - Jailbreaking attempt blocking\n")

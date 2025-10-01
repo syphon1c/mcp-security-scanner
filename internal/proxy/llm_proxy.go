@@ -13,8 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/syphon1c/mcp-security-scanner/internal/analyzer"
 	"github.com/syphon1c/mcp-security-scanner/internal/integration"
+	"github.com/syphon1c/mcp-security-scanner/internal/web"
 	"github.com/syphon1c/mcp-security-scanner/pkg/types"
 )
 
@@ -28,6 +30,7 @@ type LLMProxy struct {
 	logChan         chan types.LLMProxyLog
 	alertProcessor  *integration.AlertProcessor
 	trafficAnalyzer *analyzer.AdvancedTrafficAnalyzer
+	adminServer     *web.LLMAdminServer
 
 	// LLM-specific configuration
 	maxTokens      int
@@ -53,6 +56,7 @@ func NewLLMProxy(targetURL string, policies map[string]*types.SecurityPolicy, po
 		logChan:         make(chan types.LLMProxyLog, 1000),
 		alertProcessor:  alertProcessor,
 		trafficAnalyzer: analyzer.NewAdvancedTrafficAnalyzer(),
+		adminServer:     web.NewLLMAdminServer(policies, policyDir, string(provider)),
 		maxTokens:       8192, // Default token limit
 		blockStreaming:  false,
 		provider:        provider,
@@ -67,19 +71,28 @@ func NewLLMProxy(targetURL string, policies map[string]*types.SecurityPolicy, po
 
 // Start begins the LLM proxy server
 func (p *LLMProxy) Start(port int) error {
-	mux := http.NewServeMux()
+	router := mux.NewRouter()
 
-	// LLM API endpoints - catch all paths that might be LLM APIs
-	mux.HandleFunc("/", p.handleLLMProxy)
+	// Add LLM admin routes FIRST (before catch-all routes)
+	p.adminServer.AddRoutes(router)
 
 	// Monitoring endpoints (reuse existing pattern)
-	mux.HandleFunc("/monitor/health", p.handleHealth)
-	mux.HandleFunc("/monitor/alerts", p.handleAlerts)
-	mux.HandleFunc("/monitor/logs", p.handleLogs)
+	router.HandleFunc("/monitor/health", p.handleHealth).Methods("GET")
+	router.HandleFunc("/monitor/alerts", p.handleAlerts).Methods("GET")
+	router.HandleFunc("/monitor/logs", p.handleLogs).Methods("GET")
+
+	// LLM API endpoints - catch all paths that might be LLM APIs
+	router.HandleFunc("/v1/{path:.*}", p.handleLLMProxy).Methods("GET", "POST", "PUT", "DELETE")
+	router.HandleFunc("/chat/{path:.*}", p.handleLLMProxy).Methods("GET", "POST", "PUT", "DELETE")
+	router.HandleFunc("/completions/{path:.*}", p.handleLLMProxy).Methods("GET", "POST", "PUT", "DELETE")
+	router.HandleFunc("/models/{path:.*}", p.handleLLMProxy).Methods("GET", "POST", "PUT", "DELETE")
+
+	// Catch-all for other potential LLM endpoints (this must be LAST)
+	router.PathPrefix("/").HandlerFunc(p.handleLLMProxy)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
-		Handler:      mux,
+		Handler:      router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -88,6 +101,7 @@ func (p *LLMProxy) Start(port int) error {
 	log.Printf("LLM Security Proxy starting on port %d", port)
 	log.Printf("Proxying to: %s", p.target.String())
 	log.Printf("Provider detected: %s", p.provider)
+	log.Printf("LLM Admin Dashboard available at: http://localhost:%d/admin", port)
 
 	return server.ListenAndServe()
 }
@@ -183,25 +197,24 @@ func (p *LLMProxy) analyzeLLMRequest(request *types.LLMRequest, r *http.Request,
 		content := msg.GetContentAsString()
 		allContent.WriteString(content + " ")
 
-		// Check for prompt injection patterns
-		if p.containsPromptInjection(content) {
+		// Check for security violations using policy patterns
+		violations := p.analyzeContentWithPolicies(content)
+
+		if violations.PromptInjection {
 			context.PromptInjection = true
 			context.BlockedReasons = append(context.BlockedReasons, "Prompt injection detected")
 		}
 
-		// Check for jailbreaking attempts
-		if p.containsJailbreaking(content) {
+		if violations.Jailbreaking {
 			context.Jailbreaking = true
 			context.BlockedReasons = append(context.BlockedReasons, "Jailbreaking attempt detected")
 		}
 
-		// Check for PII
-		if p.containsPII(content) {
+		if violations.ContainsPII {
 			context.ContainsPII = true
 		}
 
-		// Check for secrets
-		if p.containsSecrets(content) {
+		if violations.ContainsSecrets {
 			context.ContainsSecrets = true
 			context.BlockedReasons = append(context.BlockedReasons, "Sensitive information detected")
 		}
@@ -218,24 +231,47 @@ func (p *LLMProxy) analyzeLLMRequest(request *types.LLMRequest, r *http.Request,
 	context.RiskLevel = p.determineLLMRiskLevel(context.RiskScore)
 
 	// Generate security alert if needed
-	if context.RiskScore >= 7 { // High risk threshold
-		alert := types.SecurityAlert{
-			Timestamp:   time.Now(),
-			Severity:    context.RiskLevel,
-			AlertType:   "LLM Security Violation",
-			Description: fmt.Sprintf("High-risk LLM request detected from %s", context.ClientIP),
-			Source:      context.ClientIP,
-			Evidence:    fmt.Sprintf("Risk score: %d, Reasons: %v", context.RiskScore, context.BlockedReasons),
-			Action:      "Monitor",
+	if len(context.BlockedReasons) > 0 || context.RiskScore >= 7 { // Alert for blocked requests or high risk
+		// Create specific alert types based on detection reasons
+		alertTypes := []string{}
+
+		if context.PromptInjection {
+			alertTypes = append(alertTypes, "Prompt Injection")
+		}
+		if context.Jailbreaking {
+			alertTypes = append(alertTypes, "Jailbreaking Attempt")
+		}
+		if context.ContainsPII {
+			alertTypes = append(alertTypes, "PII Exposure Risk")
+		}
+		if context.ContainsSecrets {
+			alertTypes = append(alertTypes, "Secret Leakage Risk")
 		}
 
-		if len(context.BlockedReasons) > 0 {
-			alert.Action = "Blocked"
+		// Default to generic if no specific type detected
+		if len(alertTypes) == 0 {
+			alertTypes = append(alertTypes, "LLM Security Violation")
 		}
 
-		select {
-		case p.alertChan <- alert:
-		default:
+		for _, alertType := range alertTypes {
+			alert := types.SecurityAlert{
+				Timestamp:   time.Now(),
+				Severity:    context.RiskLevel,
+				AlertType:   alertType,
+				Description: fmt.Sprintf("%s detected from %s", alertType, context.ClientIP),
+				Source:      context.ClientIP,
+				Evidence:    fmt.Sprintf("Risk score: %d, Reasons: %v", context.RiskScore, context.BlockedReasons),
+				Action:      "Monitor",
+			}
+
+			if len(context.BlockedReasons) > 0 {
+				alert.Action = "Blocked"
+			}
+
+			select {
+			case p.alertChan <- alert:
+			default:
+			}
 		}
 	}
 
@@ -254,18 +290,19 @@ func (p *LLMProxy) analyzeResponse(resp *http.Response, securityContext types.LL
 	// Parse LLM response
 	var llmResponse types.LLMResponse
 	if err := json.Unmarshal(respBody, &llmResponse); err == nil {
-		// Analyze response content
+		// Analyze response content using policies
 		for _, choice := range llmResponse.Choices {
 			if choice.Message != nil {
 				content := choice.Message.GetContentAsString()
+				violations := p.analyzeContentWithPolicies(content)
 
 				// Check for information disclosure
-				if p.containsSecrets(content) {
+				if violations.ContainsSecrets {
 					securityContext.ContainsSecrets = true
 				}
 
 				// Check for PII in response
-				if p.containsPII(content) {
+				if violations.ContainsPII {
 					securityContext.ContainsPII = true
 				}
 			}
@@ -307,91 +344,41 @@ func (p *LLMProxy) analyzeResponse(resp *http.Response, securityContext types.LL
 	return nil
 }
 
-// Security analysis helper methods
-func (p *LLMProxy) containsPromptInjection(content string) bool {
-	patterns := []string{
-		"ignore previous instructions",
-		"ignore all previous instructions",
-		"\\n\\nHuman:",
-		"\\n\\nAssistant:",
-		"SYSTEM: Now you are",
-		"<!-- Ignore everything above",
-		"[INST]",
-		"</INST>",
-		"pretend you are not an AI",
-		"disregard safety guidelines",
-		"override previous context",
-	}
-
+// analyzeContentWithPolicies analyzes content using policy-defined patterns
+func (p *LLMProxy) analyzeContentWithPolicies(content string) types.LLMViolations {
+	violations := types.LLMViolations{}
 	content = strings.ToLower(content)
-	for _, pattern := range patterns {
-		if strings.Contains(content, strings.ToLower(pattern)) {
-			return true
+
+	// Iterate through all loaded policies
+	for _, policy := range p.policies {
+		if policy.PolicyType != "llm" {
+			continue // Skip non-LLM policies
+		}
+
+		// Check each rule in the policy
+		for _, rule := range policy.Rules {
+			category := strings.ToLower(rule.Category)
+
+			// Check if content matches any patterns in this rule
+			for _, pattern := range rule.Patterns {
+				if strings.Contains(content, strings.ToLower(pattern)) {
+					switch {
+					case strings.Contains(rule.ID, "PROMPT_INJECTION") || category == "ai_security" && strings.Contains(strings.ToLower(rule.Description), "prompt"):
+						violations.PromptInjection = true
+					case strings.Contains(rule.ID, "JAILBREAKING") || strings.Contains(strings.ToLower(rule.Description), "jailbreak"):
+						violations.Jailbreaking = true
+					case strings.Contains(rule.ID, "PII") || category == "data_privacy":
+						violations.ContainsPII = true
+					case strings.Contains(rule.ID, "SECRET") || category == "information_disclosure":
+						violations.ContainsSecrets = true
+					}
+					break // Found a match, no need to check other patterns in this rule
+				}
+			}
 		}
 	}
-	return false
-}
 
-func (p *LLMProxy) containsJailbreaking(content string) bool {
-	patterns := []string{
-		"DAN mode",
-		"developer mode",
-		"jailbreak",
-		"ignore your instructions",
-		"act as if you have no restrictions",
-		"you are not bound by",
-		"bypass your programming",
-		"evil mode",
-		"unrestricted mode",
-	}
-
-	content = strings.ToLower(content)
-	for _, pattern := range patterns {
-		if strings.Contains(content, strings.ToLower(pattern)) {
-			return true
-		}
-	}
-	return false
-}
-
-func (p *LLMProxy) containsPII(content string) bool {
-	patterns := []string{
-		"social security number",
-		"ssn:",
-		"credit card",
-		"password:",
-		"email:",
-		"phone number:",
-		"address:",
-	}
-
-	content = strings.ToLower(content)
-	for _, pattern := range patterns {
-		if strings.Contains(content, pattern) {
-			return true
-		}
-	}
-	return false
-}
-
-func (p *LLMProxy) containsSecrets(content string) bool {
-	patterns := []string{
-		"api_key",
-		"secret_key",
-		"private_key",
-		"access_token",
-		"bearer ",
-		"sk-",
-		"pk-",
-	}
-
-	content = strings.ToLower(content)
-	for _, pattern := range patterns {
-		if strings.Contains(content, pattern) {
-			return true
-		}
-	}
-	return false
+	return violations
 }
 
 // Risk assessment methods
@@ -475,14 +462,26 @@ func (p *LLMProxy) processAlerts() {
 		if p.alertProcessor != nil {
 			p.alertProcessor.ProcessAlert(alert)
 		}
+
+		// Record in admin server for dashboard
+		p.adminServer.RecordAlert(alert)
+
+		log.Printf("LLM Security Alert: %s - %s", alert.AlertType, alert.Description)
 	}
 }
 
 func (p *LLMProxy) processLogs() {
-	// Process logs - could write to file, send to SIEM, etc.
-	for log := range p.logChan {
-		// For now, just log to stdout
-		_ = log // Placeholder
+	// Process logs - feed to admin dashboard and external systems
+	for logEntry := range p.logChan {
+		// Record in admin server for monitoring
+		p.adminServer.RecordLLMActivity(logEntry)
+
+		// Log to stdout for debugging (can be configured)
+		log.Printf("LLM Request: %s %s [%s] - Tokens: %d+%d, Risk: %s",
+			logEntry.Method, logEntry.Model, logEntry.Provider,
+			logEntry.SecurityContext.PromptTokenCount,
+			logEntry.SecurityContext.ResponseTokenCount,
+			logEntry.Risk)
 	}
 }
 
